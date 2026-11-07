@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windows 11 Replica</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="desktop">
+  <div id="icons"></div>
+</div>
+<div id="wins"></div>
+
+<!-- Start -->
+<div id="start" class="fly blur">
+  <input id="sq" placeholder="Type here to search for apps, settings, and documents">
+  <div class="sec">Pinned <small>All apps ›</small></div>
+  <div class="grid" id="pinned"></div>
+  <div class="sec">Recommended <small>More ›</small></div>
+  <div class="rec">
+    <div><i>📄</i><span>Project notes<small>Recently added</small></span></div>
+    <div><i>📊</i><span>Budget 2026<small>Yesterday</small></span></div>
+    <div><i>🖼️</i><span>Wallpaper.png<small>2h ago</small></span></div>
+    <div><i>📝</i><span>Meeting.txt<small>Tuesday</small></span></div>
+  </div>
+  <div id="start-foot">
+    <div class="user"><div class="avatar">N</div>User</div>
+    <div class="pw" id="pw">⏻</div>
+    <div id="pmenu"><div onclick="location.reload()">Restart</div><div onclick="lock()">Sleep</div><div onclick="lock()">Shut down</div></div>
+  </div>
+</div>
+
+<!-- Widgets -->
+<div id="widgets" class="fly blur">
+  <div class="wc"><div style="display:flex;justify-content:space-between"><div><b style="font-size:34px;font-weight:400">24°C</b><div>Partly sunny</div></div><div style="font-size:48px">⛅</div></div></div>
+  <div class="wc"><b>Markets</b><div style="margin-top:8px;display:flex;justify-content:space-between"><span>NIFTY 50</span><span style="color:#0f7b0f">▲ 0.42%</span></div><div style="display:flex;justify-content:space-between"><span>SENSEX</span><span style="color:#0f7b0f">▲ 0.38%</span></div></div>
+  <div class="wc"><b>Top stories</b><p style="margin-top:6px">Developers ship faster with modern web tooling</p><p style="margin-top:6px;color:var(--sub)">Open standards keep the web portable</p></div>
+  <div class="wc"><b>To Do</b><p style="margin-top:6px">☐ Review pull requests</p><p>☐ Ship the release</p></div>
+</div>
+
+<!-- Quick settings -->
+<div id="qs" class="fly blur">
+  <div class="qgrid">
+    <div class="q on" data-t="wifi">📶<span>Wi‑Fi</span></div>
+    <div class="q on" data-t="bt">🔵<span>Bluetooth</span></div>
+    <div class="q" data-t="air">✈️<span>Airplane</span></div>
+    <div class="q" data-t="saver">🔋<span>Saver</span></div>
+    <div class="q" id="darkq">🌙<span>Dark mode</span></div>
+    <div class="q" data-t="acc">♿<span>Access</span></div>
+  </div>
+  <div class="slider">🔆<input type="range" min="20" max="100" value="100" id="bright"></div>
+  <div class="slider">🔊<input type="range" min="0" max="100" value="60"></div>
+</div>
+
+<!-- Calendar -->
+<div id="cal" class="fly blur"><h3 id="calh"></h3><div class="cgrid" id="cgrid"></div></div>
+
+<div id="toast" class="fly blur open" style="transform:translateX(380px)"><b>Welcome 👋</b><div style="margin-top:4px;color:var(--sub)">Double-click an icon, right-click the desktop, or open Start.</div></div>
+
+<div id="ctx">
+  <div onclick="refresh()">🔄 Refresh</div><hr>
+  <div onclick="openApp('notepad')">📝 New text document</div>
+  <div onclick="openApp('settings')">🖥️ Display settings</div>
+  <div onclick="openApp('settings')">🎨 Personalize</div>
+</div>
+
+<div id="taskbar" class="blur">
+  <div id="tb-left"><div id="weather"><span style="font-size:24px">⛅</span><div><b style="font-size:13px">24°C</b><br>Partly sunny</div></div></div>
+  <div id="tb-center">
+    <div class="tb" id="start-btn" title="Start"><svg viewBox="0 0 24 24"><g fill="#0a84ff"><rect x="1" y="1" width="10.5" height="10.5" rx="1"/><rect x="12.5" y="1" width="10.5" height="10.5" rx="1"/><rect x="1" y="12.5" width="10.5" height="10.5" rx="1"/><rect x="12.5" y="12.5" width="10.5" height="10.5" rx="1"/></g></svg></div>
+    <div id="search-box" onclick="toggle('start')">🔍 <span>Search</span></div>
+    <div class="tb" id="widgets-btn" title="Widgets">🗂️</div>
+    <div id="tb-apps" style="display:flex;gap:4px"></div>
+  </div>
+  <div id="tb-right">
+    <div id="tray"><span>⌃</span><span>🌐</span><span>🔊</span><span>🔋</span></div>
+    <div id="clock"><span id="ct"></span><span id="cd"></span></div>
+    <div id="show"></div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
