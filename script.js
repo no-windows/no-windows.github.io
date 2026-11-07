@@ -1,21 +1,43 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const APPS={
-  explorer:{n:'File Explorer',i:'📁',w:760,h:480},
-  edge:{n:'Microsoft Edge',i:'🌐',w:900,h:560},
-  notepad:{n:'Notepad',i:'📝',w:560,h:400},
-  calc:{n:'Calculator',i:'🧮',w:340,h:520},
-  settings:{n:'Settings',i:'⚙️',w:860,h:560},
-  store:{n:'Microsoft Store',i:'🛍️',w:720,h:480},
-  photos:{n:'Photos',i:'🖼️',w:640,h:440},
-  mail:{n:'Mail',i:'✉️',w:720,h:460},
-};
-let z=10,wid=0,wins={};
-/* desktop icons + pinned */
-const dIcons=[['explorer','This PC','💻'],['edge','Microsoft Edge','🌐'],['notepad','Notes.txt','📝']];
-$('#icons').innerHTML=[...dIcons,['bin','Recycle Bin','🗑️']].map(([a,n,i])=>`<div class="dicon" data-a="${a}"><span>${i}</span>${n}</div>`).join('');
-$$('.dicon').forEach(d=>{d.onclick=e=>{e.stopPropagation();$$('.dicon').forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};d.ondblclick=()=>APPS[d.dataset.a]&&openApp(d.dataset.a)});
-$('#pinned').innerHTML=Object.entries(APPS).map(([k,a])=>`<div class="app" data-a="${k}"><i>${a.i}</i>${a.n.replace('Microsoft ','')}</div>`).join('');
-$$('.app').forEach(a=>a.onclick=()=>{openApp(a.dataset.a);close_all()});
+let APPS={},z=10,wid=0,wins={};
+const LS=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const BASE=['explorer','edge','notepad','calc','settings','store'],PROTECTED=['store','explorer','settings'];
+const DL={explorer:'This PC',notepad:'Notes.txt'};
+let installed=LS('w11.installed'),custom=LS('w11.custom')||[];
+function notify(t,m){const n=$('#toast');n.innerHTML=`<b>${esc(t)}</b><div style="margin-top:4px;color:var(--sub)">${esc(m)}</div>`;n.style.transform='none';clearTimeout(notify.t);notify.t=setTimeout(()=>n.style.transform='translateX(380px)',5000)}
+/* app registry: apps.json + user-added custom apps */
+async function loadRegistry(){
+  let list=[];
+  try{const r=await fetch('apps.json',{cache:'no-cache'});list=(await r.json()).apps}
+  catch(e){notify('Could not load apps.json','Serve this folder with a web server (python3 -m http.server) instead of opening index.html directly.')}
+  APPS={};
+  [...list,...custom].forEach(a=>{APPS[a.id]=Object.assign({w:760,h:500,icon:'📦',type:'web',cat:'Utilities',desc:''},a);APPS[a.id].i=APPS[a.id].icon;APPS[a.id].n=APPS[a.id].name});
+  if(!installed)installed=BASE.slice();
+  installed=installed.filter(id=>APPS[id]);
+  renderShell();
+}
+function saveInstalled(){SV('w11.installed',installed);renderShell()}
+/* desktop icons, Start menu, pinned taskbar buttons all follow the installed list */
+function renderShell(){
+  const desk=['explorer','edge','notepad',...installed.filter(id=>!BASE.includes(id))].filter(id=>installed.includes(id));
+  $('#icons').innerHTML=[...desk.map(id=>`<div class="dicon" data-a="${id}"><span>${APPS[id].i}</span>${esc(DL[id]||APPS[id].n)}</div>`),'<div class="dicon"><span>🗑️</span>Recycle Bin</div>'].join('');
+  $$('.dicon[data-a]').forEach(d=>{d.onclick=e=>{e.stopPropagation();$$('.dicon').forEach(x=>x.classList.remove('sel'));d.classList.add('sel')};d.ondblclick=()=>openApp(d.dataset.a)});
+  $('#pinned').innerHTML=installed.map(id=>`<div class="app" data-a="${id}"><i>${APPS[id].i}</i>${esc(APPS[id].n.replace('Microsoft ',''))}</div>`).join('');
+  $$('.app').forEach(a=>a.onclick=()=>{openApp(a.dataset.a);close_all()});
+  $$('.tb.pin').forEach(t=>{const id=t.dataset.app;if(!Object.values(wins).some(w=>w.k===id))t.remove()});
+  ['store','explorer','edge'].forEach(id=>{if(!installed.includes(id)||document.querySelector(`.tb.pin[data-app="${id}"]`))return;
+    const t=document.createElement('div');t.className='tb pin';t.dataset.app=id;t.innerHTML=APPS[id].i;t.title=APPS[id].n;t.onclick=()=>openApp(id);$('#tb-apps').before(t)});
+}
+function installApp(id,open){if(!installed.includes(id))installed.push(id);saveInstalled();if(open)openApp(id)}
+function uninstallApp(id){
+  if(PROTECTED.includes(id))return;
+  Object.values(wins).filter(w=>w.k===id).forEach(w=>w.el.querySelector('.x').click());
+  installed=installed.filter(x=>x!==id);
+  if(id.startsWith('custom-')){custom=custom.filter(a=>a.id!==id);delete APPS[id];SV('w11.custom',custom)}
+  saveInstalled();
+}
 /* flyouts */
 const FL=['start','widgets','qs','cal'];
 function close_all(except){FL.forEach(f=>{if(f!==except)$('#'+f).classList.remove('open')});$('#pmenu').style.display='none';$('#start-btn').classList.toggle('active',except==='start')}
@@ -50,18 +72,18 @@ function openApp(k){
   if(!APPS[k])return;
   const existing=Object.values(wins).find(w=>w.k===k&&k!=='notepad'&&k!=='calc');
   if(existing){restore(existing.id);return}
-  const a=APPS[k],id=++wid,el=document.createElement('div');
+  const a=Object.assign({},APPS[k],{w:Math.min(APPS[k].w,innerWidth-20),h:Math.min(APPS[k].h,innerHeight-68)}),id=++wid,el=document.createElement('div');
   el.className='win blur';el.style.cssText=`width:${a.w}px;height:${a.h}px;left:${Math.max(10,(innerWidth-a.w)/2+wid*22%120)}px;top:${Math.max(10,(innerHeight-a.h-48)/2+wid*22%100)}px;z-index:${++z}`;
   el.innerHTML=`<div class="title"><div class="t"><span>${a.i}</span>${a.n}</div><div class="ctl"><button class="mn">&#xE921;</button><button class="mx">&#xE922;</button><button class="x">&#xE8BB;</button></div></div><div class="body">${content(k)}</div><div class="rz"></div>`;
   $('#wins').appendChild(el);
-  const tb=document.createElement('div');tb.className='tb run active';tb.id='tb'+id;tb.innerHTML=a.i;tb.title=a.n;$('#tb-apps').appendChild(tb);
+  const pin=document.querySelector(`.tb.pin[data-app="${k}"]`),tb=pin||document.createElement('div');tb.classList.add('tb','run','active');tb.innerHTML=a.i;tb.title=a.n;if(!pin)$('#tb-apps').appendChild(tb);
   wins[id]={id,k,el,tb,max:false};
   const w=wins[id];
   tb.onclick=()=>{ if(w.el.classList.contains('min')||!w.el.classList.contains('focus'))restore(id);else minimize(id)};
   el.onmousedown=()=>focus(id);
   el.querySelector('.mn').onclick=()=>minimize(id);
   el.querySelector('.mx').onclick=()=>toggleMax(id);
-  el.querySelector('.x').onclick=()=>{el.remove();tb.remove();delete wins[id]};
+  el.querySelector('.x').onclick=()=>{el.remove();delete wins[id];if(pin){tb.classList.remove('run','active');tb.onclick=()=>openApp(k)}else tb.remove()};
   el.querySelector('.title').ondblclick=()=>toggleMax(id);
   drag(el,el.querySelector('.title'),id);resize(el,el.querySelector('.rz'));
   bind(k,el);focus(id);
@@ -72,12 +94,14 @@ function restore(id){wins[id].el.classList.remove('min');focus(id)}
 function toggleMax(id){const w=wins[id];w.max=!w.max;w.el.classList.toggle('max',w.max)}
 function drag(el,h,id){h.onmousedown=e=>{if(e.target.closest('.ctl')||wins[id].max)return;const ox=e.clientX-el.offsetLeft,oy=e.clientY-el.offsetTop;
   const mv=ev=>{el.style.left=ev.clientX-ox+'px';el.style.top=Math.max(0,Math.min(ev.clientY-oy,innerHeight-90))+'px'};
-  const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};addEventListener('mousemove',mv);addEventListener('mouseup',up)}}
+  document.body.classList.add('dragging');const up=()=>{document.body.classList.remove('dragging');removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};addEventListener('mousemove',mv);addEventListener('mouseup',up)}}
 function resize(el,h){h.onmousedown=e=>{e.stopPropagation();const sx=e.clientX,sy=e.clientY,sw=el.offsetWidth,sh=el.offsetHeight;
   const mv=ev=>{el.style.width=Math.max(300,sw+ev.clientX-sx)+'px';el.style.height=Math.max(200,sh+ev.clientY-sy)+'px'};
-  const up=()=>{removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};addEventListener('mousemove',mv);addEventListener('mouseup',up)}}
+  document.body.classList.add('dragging');const up=()=>{document.body.classList.remove('dragging');removeEventListener('mousemove',mv);removeEventListener('mouseup',up)};addEventListener('mousemove',mv);addEventListener('mouseup',up)}}
 /* app content */
 function content(k){
+ if(APPS[k].type==='web')return webView(APPS[k]);
+ if(k==='store')return storeView();
  if(k==='notepad')return`<div class="np" style="height:100%;display:flex;flex-direction:column"><div class="menubar"><span>File</span><span>Edit</span><span>View</span></div><textarea spellcheck="false" placeholder="Start typing…"></textarea></div>`;
  if(k==='calc')return`<div class="calc"><div class="disp"><small></small><div class="v">0</div></div><div class="keys">${['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='].map(b=>`<button class="${/\d|\./.test(b)?'n':b==='='?'eq':''}">${b}</button>`).join('')}</div></div>`;
  if(k==='explorer')return`<div class="fe"><aside><div class="a">🏠 Home</div><div>🖥️ Desktop</div><div>⬇️ Downloads</div><div>📄 Documents</div><div>🖼️ Pictures</div><div>🎵 Music</div><div style="margin-top:12px">💻 This PC</div></aside><main><div class="addr">This PC › Documents</div><div class="files"><div><i>📁</i>Projects</div><div><i>📁</i>Work</div><div><i>📁</i>Photos</div><div><i>📄</i>Notes.txt</div><div><i>📊</i>Budget.xlsx</div><div><i>🖼️</i>Logo.png</div><div><i>📕</i>Guide.pdf</div><div><i>🎞️</i>Demo.mp4</div></div></main></div>`;
@@ -86,6 +110,8 @@ function content(k){
  return`<div style="display:grid;place-items:center;height:100%;font-size:16px;color:var(--sub);text-align:center"><div><div style="font-size:60px">${APPS[k].i}</div>${APPS[k].n}</div></div>`;
 }
 function bind(k,el){
+ if(APPS[k].type==='web')return bindWeb(k,el);
+ if(k==='store')return bindStore(el);
  el.querySelectorAll('.tog').forEach(t=>t.onclick=()=>{if(t.dataset.dark!==undefined)setDark(!document.body.classList.contains('dark'));else t.classList.toggle('on')});
  if(k==='settings')el.querySelector('.tog[data-dark]').classList.toggle('on',document.body.classList.contains('dark'));
  if(k==='calc'){let cur='0',prev=null,op=null,fresh=true;const v=el.querySelector('.v'),s=el.querySelector('small');
@@ -103,5 +129,38 @@ function bind(k,el){
    show()})}
 }
 /* open a few things via taskbar pinned shortcuts */
-[['explorer','📁'],['edge','🌐'],['store','🛍️']].forEach(([k,i])=>{const t=document.createElement('div');t.className='tb';t.innerHTML=i;t.title=APPS[k].n;t.onclick=()=>openApp(k);$('#tb-apps').before(t)});
 setTimeout(()=>$('#toast').style.transform='none',900);setTimeout(()=>$('#toast').style.transform='translateX(380px)',6000);
+
+/* ---- web apps (iframe windows) ---- */
+function webView(a){const ext=/^https?:\/\//i.test(a.url);
+ return `<div class="webwrap"><div class="wbar"><span class="wt" title="${esc(a.url)}">${esc(a.url)}</span><button class="wr" title="Reload">⟳</button><button class="wo" title="Open in a new tab (use this if the page stays blank)">↗</button></div><div class="wmsg"></div><iframe title="${esc(a.n)}" allow="fullscreen; clipboard-read; clipboard-write; autoplay"${ext?' sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"':''}></iframe></div>`}
+function bindWeb(k,el){
+ const a=APPS[k],f=el.querySelector('iframe'),m=el.querySelector('.wmsg'),ext=/^https?:\/\//i.test(a.url);
+ const load=async()=>{
+  if(!ext){try{const r=await fetch(a.url,{method:'HEAD'});if(!r.ok)throw 0}catch(e){m.style.display='flex';m.innerHTML=`<div><b>App files not found</b><br>Expected at <code>${esc(a.url)}</code><br>See apps/README.md</div>`;f.style.display='none';return}}
+  m.style.display='none';f.style.display='';f.src=a.url};
+ el.querySelector('.wr').onclick=load;
+ el.querySelector('.wo').onclick=()=>window.open(a.url,'_blank','noopener');
+ load()}
+/* ---- Microsoft Store ---- */
+function storeView(){return `<div class="store"><div class="sbar"><input class="sq2" placeholder="Search apps"><div class="cats"></div></div><div class="sgrid"></div><details class="custom"><summary>＋ Add your own web app</summary><div class="cf"><input class="cn" placeholder="Name"><input class="cu" placeholder="URL, e.g. apps/myapp/index.html or https://…"><button class="add">Add</button></div></details></div>`}
+function bindStore(el){
+ let q='',cat='All';
+ const grid=el.querySelector('.sgrid'),cats=el.querySelector('.cats');
+ const render=()=>{
+  const all=Object.values(APPS).filter(a=>a.id!=='store');
+  cats.innerHTML=['All',...new Set(all.map(a=>a.cat))].map(c=>`<span class="cat${c===cat?' on':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
+  grid.innerHTML=all.filter(a=>(cat==='All'||a.cat===cat)&&(a.n+' '+a.desc).toLowerCase().includes(q)).map(a=>{const ins=installed.includes(a.id);
+   return `<div class="card"><div class="ci">${a.i}</div><div class="cm"><b>${esc(a.n)}</b><small>${esc(a.cat)} · ${a.type==='web'?'Web app':'Built-in'}</small><p>${esc(a.desc)}</p></div><div class="ca"><button class="${ins?'':'pri'}" data-id="${a.id}" data-act="${ins?'open':'get'}">${ins?'Open':'Get'}</button>${ins&&!PROTECTED.includes(a.id)?`<button data-id="${a.id}" data-act="rm">Uninstall</button>`:''}</div></div>`}).join('')||'<p style="padding:20px;color:var(--sub)">No apps found.</p>'};
+ el.querySelector('.sq2').oninput=e=>{q=e.target.value.toLowerCase();render()};
+ cats.onclick=e=>{const c=e.target.closest('.cat');if(c){cat=c.dataset.c;render()}};
+ grid.onclick=e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.id;
+  if(b.dataset.act==='get'){installApp(id,true);notify('Installed',APPS[id].n+' was added to Start and your desktop.')}
+  else if(b.dataset.act==='open')openApp(id);
+  else{uninstallApp(id)}render()};
+ el.querySelector('.add').onclick=()=>{const n=el.querySelector('.cn').value.trim(),u=el.querySelector('.cu').value.trim();
+  if(!n||!u||/^\s*(javascript|data|vbscript):/i.test(u)){notify('Check the details','Enter a name and an http(s) or relative URL.');return}
+  const a={id:'custom-'+Date.now(),name:n,url:u,icon:'🌐',cat:'Custom',desc:u,type:'web',w:900,h:580};
+  custom.push(a);SV('w11.custom',custom);APPS[a.id]=Object.assign({w:760,h:500,i:a.icon,n:a.name},a);installApp(a.id,false);el.querySelector('.cn').value=el.querySelector('.cu').value='';render()};
+ render()}
+loadRegistry();
