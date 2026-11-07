@@ -140,7 +140,7 @@ setTimeout(()=>$('#toast').style.transform='none',900);setTimeout(()=>$('#toast'
 
 /* ---- web apps (iframe windows) ---- */
 function webView(a){const ext=/^https?:\/\//i.test(a.url);
- return `<div class="webwrap"><div class="wbar"><span class="wt" title="${esc(a.url)}">${esc(a.url)}</span><button class="wr" title="Reload">⟳</button><button class="wo" title="Open in a new tab (use this if the page stays blank)">↗</button></div><div class="wmsg"></div><iframe title="${esc(a.n)}" allow="fullscreen; clipboard-read; clipboard-write; autoplay"${ext?' sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals"':''}></iframe></div>`}
+ return `<div class="webwrap"><div class="wbar"><span class="wt" title="${esc(a.url)}">${esc(a.url)}</span><button class="wr" title="Reload">⟳</button><button class="wo" title="Open in a new tab (use this if the page stays blank)">↗</button></div><div class="wmsg"></div><iframe title="${esc(a.n)}" allow="fullscreen; clipboard-read; clipboard-write; autoplay; gamepad"${ext?' sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals allow-pointer-lock"':''}></iframe></div>`}
 function bindWeb(k,el){
  const a=APPS[k],f=el.querySelector('iframe'),m=el.querySelector('.wmsg'),ext=/^https?:\/\//i.test(a.url);
  const load=async()=>{

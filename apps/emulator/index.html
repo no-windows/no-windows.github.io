@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Retro Emulator</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#16161a;color:#eee;font:14px "Segoe UI",system-ui,sans-serif}
+#home{height:100%;overflow:auto;padding:20px 24px;max-width:900px;margin:0 auto}
+h1{font-weight:600;font-size:22px;margin:0 0 4px}.sub{color:#9aa;margin-bottom:18px}
+.box{background:#22232a;border:1px solid #33343c;border-radius:8px;padding:14px;margin-bottom:14px}
+.box h2{font-size:14px;margin:0 0 10px;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button,input[type=file]{height:34px;border-radius:5px;border:1px solid #444;background:#2c2d35;color:#eee;font:inherit;padding:0 10px}
+button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#fff}button:hover{filter:brightness(1.15)}
+#drop{border:2px dashed #444;border-radius:8px;padding:18px;text-align:center;color:#9aa;margin-top:10px}#drop.on{border-color:#4cc2ff;color:#fff}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.g{background:#2a2b33;border:1px solid #3a3b44;border-radius:8px;padding:12px}.g b{display:block}.g small{color:#9aa;display:block;margin:2px 0 8px}
+.g a{color:#4cc2ff;font-size:12px;margin-left:8px}
+#msg{color:#ffb4a8;margin-top:8px;min-height:18px;font-size:13px}
+.note{color:#9aa;font-size:12px;line-height:1.6}
+#game{position:fixed;inset:0;display:none;background:#000}
+#back{position:fixed;top:6px;left:6px;z-index:2147483000;display:none;opacity:.75}
+</style>
+</head>
+<body>
+<div id="home">
+  <h1>🕹️ Retro Emulator</h1>
+  <div class="sub">Powered by EmulatorJS (GPL-3.0). Runs entirely in your browser.</div>
+
+  <div class="box">
+    <h2>Play your own game file</h2>
+    <div class="row">
+      <input type="file" id="file">
+      <select id="sys"><option value="">Auto-detect system</option></select>
+      <button class="pri" id="go">Play</button>
+    </div>
+    <div id="drop">…or drop a game file here</div>
+    <div id="msg"></div>
+    <p class="note">Files are opened locally in your browser and are not uploaded anywhere. Only use games you own or that are free to distribute.</p>
+  </div>
+
+  <div class="box">
+    <h2>Free games (homebrew)</h2>
+    <div class="games" id="games"></div>
+    <p class="note">These are freely distributable games. Download each ROM from its page and save it into <code>apps/emulator/roms/</code> using the file name shown (or edit <code>games.json</code>).</p>
+  </div>
+
+  <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, Atari 2600, PlayStation. N64, DS and PlayStation need a fairly fast device.</p>
+</div>
+<button id="back" onclick="location.reload()">← Back</button>
+<div id="game"></div>
+
+<script>
+const CDN='https://cdn.emulatorjs.org/stable/data/';
+const SYS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy / Color',gba:'Game Boy Advance',n64:'Nintendo 64',nds:'Nintendo DS',segaMD:'Sega Mega Drive',segaMS:'Sega Master System',segaGG:'Sega Game Gear',atari2600:'Atari 2600',psx:'PlayStation'};
+const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',a26:'atari2600',cue:'psx',chd:'psx',pbp:'psx'};
+const $=s=>document.querySelector(s),msg=t=>$('#msg').textContent=t||'';
+$('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+const extOf=n=>(n.split('.').pop()||'').toLowerCase();
+
+function start(url,core,name){
+  $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
+  Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0'});
+  const s=document.createElement('script');s.src=CDN+'loader.js';
+  s.onerror=()=>{location.reload()};
+  document.body.appendChild(s);
+}
+function playFile(f){
+  if(!f){msg('Choose a game file first.');return}
+  const core=$('#sys').value||EXT[extOf(f.name)];
+  if(!core){msg('Could not tell the system from ".'+extOf(f.name)+'". Pick it from the list.');return}
+  if(/\.(zip|7z|rar)$/i.test(f.name)&&!$('#sys').value){msg('Archives need the system picked from the list.');return}
+  start(URL.createObjectURL(f)+'#'+encodeURIComponent(f.name),core,f.name);
+}
+$('#go').onclick=()=>playFile($('#file').files[0]);
+const d=$('#drop');
+['dragenter','dragover'].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.add('on')}));
+['dragleave','drop'].forEach(e=>d.addEventListener(e,ev=>{ev.preventDefault();d.classList.remove('on')}));
+d.addEventListener('drop',ev=>playFile(ev.dataTransfer.files[0]));
+
+fetch('games.json',{cache:'no-cache'}).then(r=>r.json()).then(list=>{
+  $('#games').innerHTML=list.map((g,i)=>`<div class="g"><b>${g.name}</b><small>${SYS[g.system]||g.system} · ${g.license}</small><button class="pri" data-i="${i}">Play</button><a href="${g.info}" target="_blank" rel="noopener">Get ROM ↗</a></div>`).join('');
+  $('#games').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const g=list[b.dataset.i];
+    try{const r=await fetch(g.rom,{method:'HEAD'});if(!r.ok)throw 0}
+    catch(_){msg('ROM not found. Download it from the "Get ROM" link and save it as apps/emulator/'+g.rom);return}
+    start(g.rom,g.system,g.rom.split('/').pop())};
+}).catch(()=>{$('#games').textContent='games.json not found.'});
+</script>
+</body>
+</html>

@@ -145,6 +145,28 @@
       "url": "https://webamp.org",
       "w": 720,
       "h": 480
+    },
+    {
+      "id": "emulator",
+      "name": "Retro Emulator",
+      "icon": "🕹️",
+      "type": "web",
+      "cat": "Games",
+      "desc": "NES, SNES, Game Boy, GBA, N64, DS, Mega Drive, PlayStation and more. Load your own game files or free homebrew.",
+      "url": "apps/emulator/index.html",
+      "w": 960,
+      "h": 640
+    },
+    {
+      "id": "mcclassic",
+      "name": "Minecraft Classic",
+      "icon": "⛏️",
+      "type": "web",
+      "cat": "Games",
+      "desc": "Official free browser version from Mojang. Use ↗ if it stays blank.",
+      "url": "https://classic.minecraft.net",
+      "w": 960,
+      "h": 640
     }
   ]
 }
