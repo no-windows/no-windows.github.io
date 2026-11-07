@@ -7,11 +7,18 @@ const BASE=['explorer','edge','notepad','calc','settings','store'],PROTECTED=['s
 const DL={explorer:'This PC',notepad:'Notes.txt'};
 let installed=LS('w11.installed'),custom=LS('w11.custom')||[];
 function notify(t,m){const n=$('#toast');n.innerHTML=`<b>${esc(t)}</b><div style="margin-top:4px;color:var(--sub)">${esc(m)}</div>`;n.style.transform='none';clearTimeout(notify.t);notify.t=setTimeout(()=>n.style.transform='translateX(380px)',5000)}
+const FALLBACK=[
+ {id:'explorer',name:'File Explorer',icon:'📁',type:'builtin',cat:'System',desc:'Browse files and folders (demo content).',w:760,h:480},
+ {id:'edge',name:'Microsoft Edge',icon:'🌐',type:'builtin',cat:'System',desc:'Browser mockup page.',w:900,h:560},
+ {id:'notepad',name:'Notepad',icon:'📝',type:'builtin',cat:'Utilities',desc:'Simple text editor.',w:560,h:400},
+ {id:'calc',name:'Calculator',icon:'🧮',type:'builtin',cat:'Utilities',desc:'Standard calculator.',w:340,h:520},
+ {id:'settings',name:'Settings',icon:'⚙️',type:'builtin',cat:'System',desc:'Dark mode and system options.',w:860,h:560},
+ {id:'store',name:'Microsoft Store',icon:'🛍️',type:'builtin',cat:'System',desc:'Find and install apps.',w:860,h:560}];
 /* app registry: apps.json + user-added custom apps */
 async function loadRegistry(){
   let list=[];
   try{const r=await fetch('apps.json',{cache:'no-cache'});list=(await r.json()).apps}
-  catch(e){notify('Could not load apps.json','Serve this folder with a web server (python3 -m http.server) instead of opening index.html directly.')}
+  catch(e){list=FALLBACK;notify('Could not load apps.json','Showing built-in apps only. Open the page through a web server (http://127.0.0.1:8080), not by double-clicking index.html.')}
   APPS={};
   [...list,...custom].forEach(a=>{APPS[a.id]=Object.assign({w:760,h:500,icon:'📦',type:'web',cat:'Utilities',desc:''},a);APPS[a.id].i=APPS[a.id].icon;APPS[a.id].n=APPS[a.id].name});
   if(!installed)installed=BASE.slice();
