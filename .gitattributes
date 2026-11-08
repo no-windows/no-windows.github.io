@@ -1,0 +1,1 @@
+apps/emulator/roms/Tekken3.bin filter=lfs diff=lfs merge=lfs -text
