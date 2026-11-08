@@ -1,3 +1,4 @@
 [
-  {"name":"SuperMarioBros","system":"nes","rom":"roms/SuperMarioBros.nes","license":"WTFPL (free to redistribute)","info":""}
+  {"name":"SuperMarioBros","system":"nes","rom":"roms/SuperMarioBros.nes","license":"WTFPL (free to redistribute)","info":""},
+  {"name":"1200 In 1","system":"nes","rom":"roms/1200-in-1.nes","license":"WTFPL (free to redistribute)","info":""}
 ]
