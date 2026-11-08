@@ -2,6 +2,6 @@
   {"name":"SuperMarioBros","system":"nes","rom":"roms/SuperMarioBros.nes","license":"WTFPL (free to redistribute)","info":""},
   {"name":"1200 In 1","system":"nes","rom":"roms/1200-in-1.nes","license":"WTFPL (free to redistribute)","info":""},
   {"name":"Grand Theft Auto Advance (USA)","system":"gba","rom":"roms/GrandTheftAutoAdvance.gba","license":"GBA ","info":""},
-  {"name":"Tekken 3","system":"bin","rom":"roms/Tekken3.bin","license":"PlayStation ","info":""},
+  {"name":"Tekken 3","system":"psx","rom":"roms/Tekken3.bin","license":"PlayStation ","info":""},
   {"name":"Need for Speed - Most Wanted","system":"gba","rom":"roms/NeedforSpeed-MostWanted.gba","license":"GBA ","info":""}
 ]
