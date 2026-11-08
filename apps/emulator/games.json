@@ -1,3 +1,4 @@
 [
-  {"name":"Super Mario Bros","system":"nes","rom":"roms/SuperMarioBros.nes","license":"WTFPL (free to redistribute)","info":"https://sgadrat.itch.io/super-tilt-bro"}
+  {"name":"Super Tilt Bro.","system":"nes","rom":"roms/super-tilt-bro.nes","license":"WTFPL (free to redistribute)","info":"https://sgadrat.itch.io/super-tilt-bro"},
+  {"name":"Tobu Tobu Girl","system":"gb","rom":"roms/tobu-tobu-girl.gb","license":"MIT code, CC BY 4.0 assets","info":"https://tangramgames.itch.io/tobutobugirl"}
 ]

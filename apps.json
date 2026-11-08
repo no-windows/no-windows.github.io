@@ -167,6 +167,116 @@
       "url": "https://classic.minecraft.net",
       "w": 960,
       "h": 640
+    },
+    {
+      "id": "deckcraft",
+      "name": "DeckCraft",
+      "icon": "📙",
+      "type": "web",
+      "cat": "Office",
+      "desc": "Presentation and slide designer (PowerPoint alternative). Early alpha. By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/deckcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "pdfcraft",
+      "name": "PdfCraft",
+      "icon": "📕",
+      "type": "web",
+      "cat": "Office",
+      "desc": "PDF reader and editor. By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/pdfcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "photocraft",
+      "name": "PhotoCraft",
+      "icon": "📸",
+      "type": "web",
+      "cat": "Creative",
+      "desc": "Image editor (Photoshop alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/photocraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "lightcraft",
+      "name": "LightCraft",
+      "icon": "💡",
+      "type": "web",
+      "cat": "Creative",
+      "desc": "Photo library and RAW developer (Lightroom alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/lightcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "vectorcraft",
+      "name": "VectorCraft",
+      "icon": "✒️",
+      "type": "web",
+      "cat": "Creative",
+      "desc": "Vector illustration (Illustrator alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/vectorcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "designcraft",
+      "name": "DesignCraft",
+      "icon": "📐",
+      "type": "web",
+      "cat": "Creative",
+      "desc": "Desktop publishing and page layout (InDesign alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/designcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "effectcraft",
+      "name": "EffectCraft",
+      "icon": "✨",
+      "type": "web",
+      "cat": "Creative",
+      "desc": "Motion graphics and visual effects (After Effects alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/effectcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "filmcraft",
+      "name": "FilmCraft",
+      "icon": "🎬",
+      "type": "web",
+      "cat": "Media",
+      "desc": "Non-linear video editor with color and sound (Premiere alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/filmcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "soundcraft",
+      "name": "SoundCraft",
+      "icon": "🎚️",
+      "type": "web",
+      "cat": "Media",
+      "desc": "Digital audio workstation for recording, editing and mixing. By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/soundcraft/index.html",
+      "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "cadcraft",
+      "name": "CADCraft",
+      "icon": "🏗️",
+      "type": "web",
+      "cat": "Engineering",
+      "desc": "2D and 3D CAD drafting (AutoCAD alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
+      "url": "apps/cadcraft/index.html",
+      "w": 1100,
+      "h": 680
     }
   ]
 }

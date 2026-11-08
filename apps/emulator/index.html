@@ -62,28 +62,10 @@ $('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}
 const extOf=n=>(n.split('.').pop()||'').toLowerCase();
 
 function start(url,core,name){
-  console.log("STARTING");
-  console.log(url);
-  console.log(core);
-
-  $('#home').style.display='none';
-  $('#game').style.display='block!important';
-  $('#back').style.display='block';
-
-  Object.assign(window,{
-    EJS_player:'#game',
-    EJS_core:core,
-    EJS_gameUrl:url,
-    EJS_gameName:name,
-    EJS_pathtodata:CDN
-  });
-
-  const s=document.createElement('script');
-  s.src=CDN+'loader.js';
-
-  s.onload = () => console.log("loader loaded");
-  s.onerror = () => console.error("loader failed");
-
+  $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
+  Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0'});
+  const s=document.createElement('script');s.src=CDN+'loader.js';
+  s.onerror=()=>{location.reload()};
   document.body.appendChild(s);
 }
 function playFile(f){
