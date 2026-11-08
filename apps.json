@@ -82,7 +82,7 @@
     },
     {
       "id": "wordcraft",
-      "name": "WordCraft",
+      "name": "MS Word",
       "icon": "📘",
       "type": "web",
       "cat": "Office",
@@ -93,7 +93,7 @@
     },
     {
       "id": "gridcraft",
-      "name": "GridCraft",
+      "name": "MS Excel",
       "icon": "📗",
       "type": "web",
       "cat": "Office",
@@ -104,7 +104,7 @@
     },
     {
       "id": "jspaint",
-      "name": "Paint (jspaint)",
+      "name": "MS Paint",
       "icon": "🎨",
       "type": "web",
       "cat": "Creative",
@@ -148,7 +148,7 @@
     },
     {
       "id": "emulator",
-      "name": "Retro Emulator",
+      "name": "Retro Games",
       "icon": "🕹️",
       "type": "web",
       "cat": "Games",
@@ -158,19 +158,8 @@
       "h": 640
     },
     {
-      "id": "mcclassic",
-      "name": "Minecraft Classic",
-      "icon": "⛏️",
-      "type": "web",
-      "cat": "Games",
-      "desc": "Official free browser version from Mojang. Use ↗ if it stays blank.",
-      "url": "https://classic.minecraft.net",
-      "w": 960,
-      "h": 640
-    },
-    {
       "id": "deckcraft",
-      "name": "DeckCraft",
+      "name": "MS PowerPoint",
       "icon": "📙",
       "type": "web",
       "cat": "Office",
@@ -181,7 +170,7 @@
     },
     {
       "id": "pdfcraft",
-      "name": "PdfCraft",
+      "name": "Adobe Reader",
       "icon": "📕",
       "type": "web",
       "cat": "Office",
@@ -192,7 +181,7 @@
     },
     {
       "id": "photocraft",
-      "name": "PhotoCraft",
+      "name": "Photoshop",
       "icon": "📸",
       "type": "web",
       "cat": "Creative",
@@ -203,7 +192,7 @@
     },
     {
       "id": "lightcraft",
-      "name": "LightCraft",
+      "name": "Lightroom",
       "icon": "💡",
       "type": "web",
       "cat": "Creative",
@@ -214,7 +203,7 @@
     },
     {
       "id": "vectorcraft",
-      "name": "VectorCraft",
+      "name": "Illustrator",
       "icon": "✒️",
       "type": "web",
       "cat": "Creative",
@@ -225,7 +214,7 @@
     },
     {
       "id": "designcraft",
-      "name": "DesignCraft",
+      "name": "InDesign",
       "icon": "📐",
       "type": "web",
       "cat": "Creative",
@@ -236,7 +225,7 @@
     },
     {
       "id": "effectcraft",
-      "name": "EffectCraft",
+      "name": "After Effects",
       "icon": "✨",
       "type": "web",
       "cat": "Creative",
@@ -247,7 +236,7 @@
     },
     {
       "id": "filmcraft",
-      "name": "FilmCraft",
+      "name": "Premiere",
       "icon": "🎬",
       "type": "web",
       "cat": "Media",
@@ -269,7 +258,7 @@
     },
     {
       "id": "cadcraft",
-      "name": "CADCraft",
+      "name": "AutoCAD",
       "icon": "🏗️",
       "type": "web",
       "cat": "Engineering",
