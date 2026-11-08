@@ -21,7 +21,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
 .g a{color:#4cc2ff;font-size:12px;margin-left:8px}
 #msg{color:#ffb4a8;margin-top:8px;min-height:18px;font-size:13px}
 .note{color:#9aa;font-size:12px;line-height:1.6}
-#game{position:fixed;inset:0;display:none;background:#000}
+#game{inset:0;background:#000}
 #back{position:fixed;top:6px;left:6px;z-index:2147483000;display:none;opacity:.75}
 </style>
 </head>
@@ -62,10 +62,28 @@ $('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}
 const extOf=n=>(n.split('.').pop()||'').toLowerCase();
 
 function start(url,core,name){
-  $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
-  Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0'});
-  const s=document.createElement('script');s.src=CDN+'loader.js';
-  s.onerror=()=>{location.reload()};
+  console.log("STARTING");
+  console.log(url);
+  console.log(core);
+
+  $('#home').style.display='none';
+  $('#game').style.display='block!important';
+  $('#back').style.display='block';
+
+  Object.assign(window,{
+    EJS_player:'#game',
+    EJS_core:core,
+    EJS_gameUrl:url,
+    EJS_gameName:name,
+    EJS_pathtodata:CDN
+  });
+
+  const s=document.createElement('script');
+  s.src=CDN+'loader.js';
+
+  s.onload = () => console.log("loader loaded");
+  s.onerror = () => console.error("loader failed");
+
   document.body.appendChild(s);
 }
 function playFile(f){
