@@ -12,13 +12,14 @@
     },
     {
       "id": "edge",
-      "name": "Microsoft Edge",
+      "name": "Browser",
       "icon": "🌐",
-      "type": "builtin",
+      "type": "web",
       "cat": "System",
-      "desc": "Browser mockup page.",
-      "w": 900,
-      "h": 560
+      "desc": "Tabbed browser with bookmarks and privacy settings. Not a VPN or Tor; see its Privacy page.",
+      "w": 1000,
+      "h": 640,
+      "url": "apps/browser/index.html"
     },
     {
       "id": "notepad",
