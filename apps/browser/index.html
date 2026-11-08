@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Browser</title>
+<style>
+:root{--bg:#f3f3f3;--bar:#fff;--tx:#1a1a1a;--sub:#5d5d5d;--st:rgba(0,0,0,.12);--ac:#0067c0;--card:#fff;--hov:rgba(0,0,0,.07)}
+@media(prefers-color-scheme:dark){:root{--bg:#202020;--bar:#2b2b2b;--tx:#f2f2f2;--sub:#b5b5b5;--st:rgba(255,255,255,.14);--ac:#4cc2ff;--card:#2f2f2f;--hov:rgba(255,255,255,.09)}}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--tx);font:13px "Segoe UI",system-ui,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+#tabs{display:flex;align-items:flex-end;gap:2px;padding:6px 6px 0;overflow-x:auto;flex:none}
+.tab{display:flex;align-items:center;gap:6px;min-width:110px;max-width:190px;height:32px;padding:0 6px 0 10px;border-radius:8px 8px 0 0;font-size:12px;cursor:default}
+.tab span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tab:hover{background:var(--hov)}.tab.on{background:var(--bar)}
+.tab button,#plus{border:0;background:none;color:var(--tx);border-radius:4px;width:22px;height:22px}.tab button:hover,#plus:hover{background:var(--hov)}
+#bar{display:flex;align-items:center;gap:4px;padding:5px 8px;background:var(--bar);border-bottom:1px solid var(--st);flex:none}
+#bar button{border:0;background:none;color:var(--tx);width:30px;height:30px;border-radius:5px;font-size:15px}#bar button:hover{background:var(--hov)}#bar button:disabled{opacity:.35}
+#addr{flex:1;height:30px;border-radius:15px;border:1px solid var(--st);border-bottom:2px solid var(--ac);background:var(--bg);color:var(--tx);padding:0 14px;font:inherit;outline:none}
+#hint{display:none;align-items:center;gap:10px;padding:6px 12px;background:#fff4ce;color:#3b2f00;font-size:12px;flex:none}
+#hint button{border:1px solid #c9b25a;background:#fff;border-radius:4px;padding:3px 10px}#hint .x{margin-left:auto;border:0;background:none}
+#views{flex:1;position:relative;background:#fff}
+.view{position:absolute;inset:0;display:none}.view.on{display:block}
+.view iframe{width:100%;height:100%;border:0;background:#fff}
+.page{height:100%;overflow:auto;background:var(--bg);padding:28px 20px;user-select:text}
+.in{max-width:760px;margin:0 auto}.in h1{font-weight:600;font-size:24px;margin-bottom:6px}.in h2{font-size:15px;margin:22px 0 8px}.in p,.in li{color:var(--sub);line-height:1.65;margin-bottom:6px}.in ul{padding-left:20px}
+.sf{display:flex;gap:8px;margin:18px 0}.sf input{flex:1;height:40px;border-radius:20px;border:1px solid var(--st);background:var(--card);color:var(--tx);padding:0 18px;font:inherit;font-size:14px;outline:none}
+.btn{height:32px;border-radius:5px;border:1px solid var(--st);background:var(--card);color:var(--tx);padding:0 14px;font:inherit;cursor:pointer}.btn.pri{background:var(--ac);color:#fff;border-color:transparent}.btn:hover{filter:brightness(.95)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.q{background:var(--card);border:1px solid var(--st);border-radius:8px;padding:12px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx)}.q:hover{filter:brightness(.96)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--card);border:1px solid var(--st);border-radius:6px;padding:10px 14px;margin-bottom:4px;color:var(--tx)}
+.row input[type=text],.row select{height:30px;border-radius:4px;border:1px solid var(--st);background:var(--bg);color:var(--tx);padding:0 8px;font:inherit;min-width:220px}
+.warn{border-left:4px solid #d13438;background:var(--card);padding:10px 14px;border-radius:4px;margin:12px 0;color:var(--tx)}
+a.go{color:var(--ac);cursor:pointer;text-decoration:underline}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="tabs"></div>
+  <div id="bar">
+    <button id="back" title="Back">←</button><button id="fwd" title="Forward">→</button><button id="rel" title="Reload">⟳</button>
+    <input id="addr" placeholder="Search or enter address" spellcheck="false" autocomplete="off">
+    <button id="star" title="Bookmark">☆</button><button id="pv" title="Privacy and Tor">🛡️</button><button id="menu" title="Bookmarks and history">☰</button>
+  </div>
+  <div id="hint"><span>Blank page? Many websites forbid being shown inside another page. That is the site's choice, not a bug.</span><button id="ext">Open in a real tab ↗</button><button class="x" id="hx">✕</button></div>
+  <div id="views"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+let cfg=Object.assign({engine:'ddg',priv:false,noref:true,remote:''},LS('br.cfg',{})),bm=LS('br.bm',[]),hist=LS('br.hist',[]);
+const ENG={ddg:['DuckDuckGo','https://duckduckgo.com/?q='],brave:['Brave Search','https://search.brave.com/search?q='],sp:['Startpage','https://www.startpage.com/do/search?q='],wiki:['Wikipedia','https://en.wikipedia.org/w/index.php?search=']};
+const TITLES={'about:newtab':'New tab','about:privacy':'Privacy and Tor','about:history':'History','about:bookmarks':'Bookmarks','about:onion':'Onion address'};
+let tabs=[],cur=null,nid=0;
+const save=()=>{SV('br.cfg',cfg);SV('br.bm',bm);SV('br.hist',hist)};
+
+function normalize(v){
+  v=v.trim();if(!v)return 'about:newtab';
+  if(/^about:/.test(v))return TITLES[v]?v:'about:newtab';
+  if(/^\s*(javascript|data|vbscript|file|blob):/i.test(v))return 'about:newtab';
+  if(/^[\w.-]+\.onion(\/|:|$)/i.test(v)||/^https?:\/\/[\w.-]+\.onion/i.test(v))return 'about:onion#'+encodeURIComponent(v);
+  if(/^https?:\/\//i.test(v))return v;
+  if(!/\s/.test(v)&&(/^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/.test(v)||/^localhost(:\d+)?(\/.*)?$/.test(v)))return 'https://'+v;
+  return ENG[cfg.engine][1]+encodeURIComponent(v);
+}
+const isInt=u=>u.startsWith('about:');
+function newTab(url){const t={id:++nid,url:'about:newtab',title:'New tab',h:[],i:-1};tabs.push(t);cur=t;go(t,url||'about:newtab');}
+function go(t,input,push=true){
+  const url=normalize(input);
+  if(push){t.h=t.h.slice(0,t.i+1);t.h.push(url);t.i++}
+  t.url=url;
+  const base=url.split('#')[0];
+  t.title=isInt(url)?TITLES[base]:(()=>{try{return new URL(url).hostname}catch(e){return url}})();
+  if(!isInt(url)&&!cfg.priv){hist.unshift({u:url,t:Date.now()});hist=hist.slice(0,200);save()}
+  render(true);
+}
+function render(reload){
+  $('#tabs').innerHTML=tabs.map(t=>`<div class="tab${t===cur?' on':''}" data-t="${t.id}"><span>${esc(t.title)}</span><button data-x="${t.id}">✕</button></div>`).join('')+'<button id="plus" title="New tab">＋</button>';
+  const T=cur;
+  $('#addr').value=isInt(T.url)?'':T.url;
+  $('#back').disabled=T.i<=0;$('#fwd').disabled=T.i>=T.h.length-1;
+  $('#star').textContent=bm.some(b=>b.u===T.url)?'★':'☆';
+  $('#hint').style.display=(!isInt(T.url)&&!T.dismissed)?'flex':'none';
+  tabs.forEach(t=>{
+    let v=document.getElementById('v'+t.id);
+    if(!v){v=document.createElement('div');v.className='view';v.id='v'+t.id;$('#views').appendChild(v)}
+    v.classList.toggle('on',t===cur);
+    if(t.shown!==t.url||(reload&&t===cur)){
+      t.shown=t.url;
+      if(isInt(t.url))v.innerHTML='<div class="page"><div class="in">'+internal(t.url)+'</div></div>';
+      else{v.innerHTML='';const f=document.createElement('iframe');f.title=t.title;
+        f.setAttribute('allow','fullscreen; clipboard-write');
+        f.setAttribute('sandbox','allow-scripts allow-same-origin allow-forms allow-popups allow-downloads allow-modals');
+        if(cfg.noref)f.referrerPolicy='no-referrer';
+        f.src=t.url;v.appendChild(f)}
+    }
+  });
+  [...document.querySelectorAll('.view')].forEach(v=>{if(!tabs.some(t=>'v'+t.id===v.id))v.remove()});
+}
+/* internal pages */
+function internal(u){
+  const [p,arg]=u.split('#');
+  if(p==='about:newtab')return `<h1>New tab</h1><form class="sf" data-search><input name="q" placeholder="Search with ${esc(ENG[cfg.engine][0])} or type an address" autofocus><button class="btn pri">Search</button></form>
+   <h2>Quick links</h2><div class="grid">${[['Wikipedia','https://en.wikipedia.org/'],['OpenStreetMap','https://www.openstreetmap.org/'],['Internet Archive','https://archive.org/'],['Tor check','https://check.torproject.org/'],['Tor Project','https://www.torproject.org/']].map(([n,l])=>`<div class="q" data-go="${l}">${n}</div>`).join('')}</div>
+   ${bm.length?`<h2>Bookmarks</h2><div class="grid">${bm.map(b=>`<div class="q" data-go="${esc(b.u)}">${esc(b.n)}</div>`).join('')}</div>`:''}`;
+  if(p==='about:history')return `<h1>History</h1><p>${cfg.priv?'Private mode is on: new pages are not saved.':''}</p><p><button class="btn" data-act="clearhist">Clear history</button></p>`+(hist.map(h=>`<div class="row"><a class="go" data-go="${esc(h.u)}">${esc(h.u)}</a><small>${new Date(h.t).toLocaleString()}</small></div>`).join('')||'<p>Nothing yet.</p>');
+  if(p==='about:bookmarks')return `<h1>Bookmarks</h1>`+(bm.map((b,i)=>`<div class="row"><a class="go" data-go="${esc(b.u)}">${esc(b.n)}</a><button class="btn" data-rmbm="${i}">Remove</button></div>`).join('')||'<p>Use ☆ in the address bar to add one.</p>');
+  if(p==='about:onion'){const a=esc(decodeURIComponent(arg||''));return `<h1>.onion address</h1><p><b>${a}</b></p><p>.onion sites are reachable only through the Tor network. A normal browser, and this window, cannot open them. Opening them through a public "Tor gateway" website would remove the anonymity Tor exists to give you, so this browser does not do that.</p>
+   <h2>How to open it</h2><ul><li>Install the official <a class="go" data-go="https://www.torproject.org/download/">Tor Browser</a> (free, Windows, macOS, Linux, Android) and paste the address there.</li><li>Or connect a remote Tor browser you run yourself (see Privacy and Tor).</li></ul>
+   ${cfg.remote?`<p><button class="btn pri" data-go="${esc(cfg.remote)}">Open my remote Tor browser</button></p>`:''}`}
+  if(p==='about:privacy')return `<h1>Privacy and Tor</h1>
+   <div class="warn"><b>This window does not hide your IP address and is not a VPN or Tor.</b> The sites you visit still see your real connection. A web page cannot create a VPN or a Tor circuit; that needs a program or a server.</div>
+   <h2>What these settings really do</h2>
+   <div class="row"><span>Private mode: do not save history</span><input type="checkbox" id="c-priv" ${cfg.priv?'checked':''}></div>
+   <div class="row"><span>Send no referrer to sites</span><input type="checkbox" id="c-ref" ${cfg.noref?'checked':''}></div>
+   <div class="row"><span>Search engine</span><select id="c-eng">${Object.entries(ENG).map(([k,v])=>`<option value="${k}"${k===cfg.engine?' selected':''}>${v[0]}</option>`).join('')}</select></div>
+   <div class="row"><span>Clear history, bookmarks and settings</span><button class="btn" data-act="wipe">Clear all</button></div>
+   <h2>Get real anonymity</h2>
+   <ul><li><b>Tor Browser</b> (free, official): <a class="go" data-go="https://www.torproject.org/download/">torproject.org/download</a>. Lets you open .onion sites and hides your IP from the sites you visit.</li>
+   <li><b>VPN:</b> a trustworthy VPN is a paid service in almost every case. A few reputable providers offer a limited free tier (few locations, speed caps). Free VPNs with "all locations" are the ones most likely to log or sell your traffic.</li></ul>
+   <h2>Remote browser (advanced)</h2>
+   <p>If you self-host a browser in a container (for example a Tor Browser image) and put it behind a VPN, you can show it in this window. Paste its address:</p>
+   <div class="row"><input type="text" id="c-rem" placeholder="http://127.0.0.1:8080" value="${esc(cfg.remote)}"><button class="btn" data-act="saverem">Save</button><button class="btn pri" data-act="openrem">Open</button></div>
+   <p>Test your connection any time at <a class="go" data-go="https://check.torproject.org/">check.torproject.org</a>.</p>`;
+  return '';
+}
+/* events */
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]');if(g){go(cur,g.dataset.go);return}
+  const tb=e.target.closest('[data-t]'),x=e.target.closest('[data-x]');
+  if(x){const t=tabs.find(t=>t.id==x.dataset.x);tabs=tabs.filter(q=>q!==t);if(!tabs.length)newTab();else if(cur===t)cur=tabs[tabs.length-1];render();e.stopPropagation();return}
+  if(tb){cur=tabs.find(t=>t.id==tb.dataset.t);render();return}
+  if(e.target.closest('#plus')){newTab();return}
+  const rm=e.target.closest('[data-rmbm]');if(rm){bm.splice(+rm.dataset.rmbm,1);save();cur.shown=null;render(true);return}
+  const a=e.target.closest('[data-act]');if(!a)return;const k=a.dataset.act;
+  if(k==='clearhist'){hist=[];save();cur.shown=null;render(true)}
+  if(k==='wipe'&&confirm('Clear history, bookmarks and settings?')){hist=[];bm=[];cfg={engine:'ddg',priv:false,noref:true,remote:''};save();cur.shown=null;render(true)}
+  if(k==='saverem'||k==='openrem'){const v=$('#c-rem').value.trim();if(/^\s*(javascript|data|vbscript|file|blob):/i.test(v)){return}cfg.remote=v;save();if(k==='openrem'&&v)newTab(v)}
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='c-priv')cfg.priv=e.target.checked;
+  if(e.target.id==='c-ref')cfg.noref=e.target.checked;
+  if(e.target.id==='c-eng')cfg.engine=e.target.value;
+  save()});
+document.addEventListener('submit',e=>{if(e.target.matches('[data-search]')){e.preventDefault();go(cur,new FormData(e.target).get('q'))}});
+$('#addr').addEventListener('keydown',e=>{if(e.key==='Enter')go(cur,e.target.value)});
+$('#addr').addEventListener('focus',e=>e.target.select());
+$('#back').onclick=()=>{if(cur.i>0){cur.i--;go(cur,cur.h[cur.i],false)}};
+$('#fwd').onclick=()=>{if(cur.i<cur.h.length-1){cur.i++;go(cur,cur.h[cur.i],false)}};
+$('#rel').onclick=()=>{cur.shown=null;render(true)};
+$('#star').onclick=()=>{if(isInt(cur.url))return;const i=bm.findIndex(b=>b.u===cur.url);if(i>=0)bm.splice(i,1);else bm.push({u:cur.url,n:cur.title});save();render()};
+$('#pv').onclick=()=>go(cur,'about:privacy');
+$('#menu').onclick=()=>go(cur,'about:bookmarks');
+$('#ext').onclick=()=>{if(!isInt(cur.url))window.open(cur.url,'_blank','noopener,noreferrer')};
+$('#hx').onclick=()=>{cur.dismissed=true;render()};
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='t'){e.preventDefault();newTab()}if(e.ctrlKey&&e.key==='l'){e.preventDefault();$('#addr').focus()}});
+newTab();
+</script>
+</body>
+</html>
