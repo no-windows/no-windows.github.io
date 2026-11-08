@@ -51,7 +51,10 @@ const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const LS=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}},SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let cfg=Object.assign({engine:'ddg',priv:false,noref:true,remote:''},LS('br.cfg',{})),bm=LS('br.bm',[]),hist=LS('br.hist',[]);
 const ENG={ddg:['DuckDuckGo','https://duckduckgo.com/?q='],brave:['Brave Search','https://search.brave.com/search?q='],sp:['Startpage','https://www.startpage.com/do/search?q='],wiki:['Wikipedia','https://en.wikipedia.org/w/index.php?search=']};
-const TITLES={'about:newtab':'New tab','about:privacy':'Privacy and Tor','about:history':'History','about:bookmarks':'Bookmarks','about:onion':'Onion address'};
+const TITLES={'about:newtab':'New tab','about:privacy':'Privacy and Tor','about:history':'History','about:bookmarks':'Bookmarks','about:onion':'Onion address','about:blocked':'Cannot embed'};
+const hostOf=u=>{try{return new URL(u).hostname}catch(e){return ''}};
+const BLOCK=/(^|\.)(google\.[a-z.]+|duckduckgo\.com|bing\.com|brave\.com|startpage\.com|torproject\.org|github\.com|youtube\.com|facebook\.com|instagram\.com|x\.com|twitter\.com|linkedin\.com|reddit\.com|amazon\.[a-z.]+|netflix\.com|paypal\.com)$/i;
+const real=t=>t.url.startsWith('about:blocked#')?decodeURIComponent(t.url.split('#')[1]):t.url;
 let tabs=[],cur=null,nid=0;
 const save=()=>{SV('br.cfg',cfg);SV('br.bm',bm);SV('br.hist',hist)};
 
@@ -66,8 +69,9 @@ function normalize(v){
 }
 const isInt=u=>u.startsWith('about:');
 function newTab(url){const t={id:++nid,url:'about:newtab',title:'New tab',h:[],i:-1};tabs.push(t);cur=t;go(t,url||'about:newtab');}
-function go(t,input,push=true){
-  const url=normalize(input);
+function go(t,input,push=true,force=false){
+  let url=normalize(input);
+  if(!force&&!isInt(url)&&BLOCK.test(hostOf(url)))url='about:blocked#'+encodeURIComponent(url);
   if(push){t.h=t.h.slice(0,t.i+1);t.h.push(url);t.i++}
   t.url=url;
   const base=url.split('#')[0];
@@ -78,9 +82,9 @@ function go(t,input,push=true){
 function render(reload){
   $('#tabs').innerHTML=tabs.map(t=>`<div class="tab${t===cur?' on':''}" data-t="${t.id}"><span>${esc(t.title)}</span><button data-x="${t.id}">✕</button></div>`).join('')+'<button id="plus" title="New tab">＋</button>';
   const T=cur;
-  $('#addr').value=isInt(T.url)?'':T.url;
+  $('#addr').value=isInt(real(T))?'':real(T);
   $('#back').disabled=T.i<=0;$('#fwd').disabled=T.i>=T.h.length-1;
-  $('#star').textContent=bm.some(b=>b.u===T.url)?'★':'☆';
+  $('#star').textContent=bm.some(b=>b.u===real(T))?'★':'☆';
   $('#hint').style.display=(!isInt(T.url)&&!T.dismissed)?'flex':'none';
   tabs.forEach(t=>{
     let v=document.getElementById('v'+t.id);
@@ -104,6 +108,7 @@ function internal(u){
   if(p==='about:newtab')return `<h1>New tab</h1><form class="sf" data-search><input name="q" placeholder="Search with ${esc(ENG[cfg.engine][0])} or type an address" autofocus><button class="btn pri">Search</button></form>
    <h2>Quick links</h2><div class="grid">${[['Wikipedia','https://en.wikipedia.org/'],['OpenStreetMap','https://www.openstreetmap.org/'],['Internet Archive','https://archive.org/'],['Tor check','https://check.torproject.org/'],['Tor Project','https://www.torproject.org/']].map(([n,l])=>`<div class="q" data-go="${l}">${n}</div>`).join('')}</div>
    ${bm.length?`<h2>Bookmarks</h2><div class="grid">${bm.map(b=>`<div class="q" data-go="${esc(b.u)}">${esc(b.n)}</div>`).join('')}</div>`:''}`;
+  if(p==='about:blocked'){const u=decodeURIComponent(arg||''),h=hostOf(u);return `<h1>${esc(h)} will not open inside this window</h1><p>This site tells browsers not to show it inside another page. Other browsers describe that as "refused to connect". It is a protection on the site's side, not an error on your computer.</p><p><button class="btn pri" data-popup="${esc(u)}">Open in a browser window ↗</button> <button class="btn" data-open="${esc(u)}">Open in a new tab</button> <button class="btn" data-force="${esc(u)}">Try here anyway</button></p>`}
   if(p==='about:history')return `<h1>History</h1><p>${cfg.priv?'Private mode is on: new pages are not saved.':''}</p><p><button class="btn" data-act="clearhist">Clear history</button></p>`+(hist.map(h=>`<div class="row"><a class="go" data-go="${esc(h.u)}">${esc(h.u)}</a><small>${new Date(h.t).toLocaleString()}</small></div>`).join('')||'<p>Nothing yet.</p>');
   if(p==='about:bookmarks')return `<h1>Bookmarks</h1>`+(bm.map((b,i)=>`<div class="row"><a class="go" data-go="${esc(b.u)}">${esc(b.n)}</a><button class="btn" data-rmbm="${i}">Remove</button></div>`).join('')||'<p>Use ☆ in the address bar to add one.</p>');
   if(p==='about:onion'){const a=esc(decodeURIComponent(arg||''));return `<h1>.onion address</h1><p><b>${a}</b></p><p>.onion sites are reachable only through the Tor network. A normal browser, and this window, cannot open them. Opening them through a public "Tor gateway" website would remove the anonymity Tor exists to give you, so this browser does not do that.</p>
@@ -119,6 +124,8 @@ function internal(u){
    <h2>Get real anonymity</h2>
    <ul><li><b>Tor Browser</b> (free, official): <a class="go" data-go="https://www.torproject.org/download/">torproject.org/download</a>. Lets you open .onion sites and hides your IP from the sites you visit.</li>
    <li><b>VPN:</b> a trustworthy VPN is a paid service in almost every case. A few reputable providers offer a limited free tier (few locations, speed caps). Free VPNs with "all locations" are the ones most likely to log or sell your traffic.</li></ul>
+   <h2>Everyday private browsers (install on your computer)</h2>
+   <ul><li><a class="go" data-go="https://mullvad.net/en/browser">Mullvad Browser</a>: built with the Tor Project, blocks tracking and fingerprinting, no VPN needed.</li><li><a class="go" data-go="https://librewolf.net/">LibreWolf</a>: open-source Firefox with tracking protection on by default.</li><li><a class="go" data-go="https://www.falkon.org/">Falkon</a>: small, open-source and light on older or low-power machines.</li></ul>
    <h2>Remote browser (advanced)</h2>
    <p>If you self-host a browser in a container (for example a Tor Browser image) and put it behind a VPN, you can show it in this window. Paste its address:</p>
    <div class="row"><input type="text" id="c-rem" placeholder="http://127.0.0.1:8080" value="${esc(cfg.remote)}"><button class="btn" data-act="saverem">Save</button><button class="btn pri" data-act="openrem">Open</button></div>
@@ -127,6 +134,9 @@ function internal(u){
 }
 /* events */
 document.addEventListener('click',e=>{
+  const pu=e.target.closest('[data-popup]');if(pu){window.open(pu.dataset.popup,'_blank','popup=yes,width=1100,height=760,noopener,noreferrer');return}
+  const o=e.target.closest('[data-open]');if(o){window.open(o.dataset.open,'_blank','noopener,noreferrer');return}
+  const f=e.target.closest('[data-force]');if(f){go(cur,f.dataset.force,true,true);return}
   const g=e.target.closest('[data-go]');if(g){go(cur,g.dataset.go);return}
   const tb=e.target.closest('[data-t]'),x=e.target.closest('[data-x]');
   if(x){const t=tabs.find(t=>t.id==x.dataset.x);tabs=tabs.filter(q=>q!==t);if(!tabs.length)newTab();else if(cur===t)cur=tabs[tabs.length-1];render();e.stopPropagation();return}
@@ -149,10 +159,10 @@ $('#addr').addEventListener('focus',e=>e.target.select());
 $('#back').onclick=()=>{if(cur.i>0){cur.i--;go(cur,cur.h[cur.i],false)}};
 $('#fwd').onclick=()=>{if(cur.i<cur.h.length-1){cur.i++;go(cur,cur.h[cur.i],false)}};
 $('#rel').onclick=()=>{cur.shown=null;render(true)};
-$('#star').onclick=()=>{if(isInt(cur.url))return;const i=bm.findIndex(b=>b.u===cur.url);if(i>=0)bm.splice(i,1);else bm.push({u:cur.url,n:cur.title});save();render()};
+$('#star').onclick=()=>{const u=real(cur);if(isInt(u))return;const i=bm.findIndex(b=>b.u===u);if(i>=0)bm.splice(i,1);else bm.push({u,n:hostOf(u)||u});save();render()};
 $('#pv').onclick=()=>go(cur,'about:privacy');
 $('#menu').onclick=()=>go(cur,'about:bookmarks');
-$('#ext').onclick=()=>{if(!isInt(cur.url))window.open(cur.url,'_blank','noopener,noreferrer')};
+$('#ext').onclick=()=>{const u=real(cur);if(!isInt(u))window.open(u,'_blank','noopener,noreferrer')};
 $('#hx').onclick=()=>{cur.dismissed=true;render()};
 document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='t'){e.preventDefault();newTab()}if(e.ctrlKey&&e.key==='l'){e.preventDefault();$('#addr').focus()}});
 newTab();

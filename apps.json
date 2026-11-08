@@ -83,7 +83,7 @@
     },
     {
       "id": "wordcraft",
-      "name": "MS Word",
+      "name": "WordCraft",
       "icon": "📘",
       "type": "web",
       "cat": "Office",
@@ -94,7 +94,7 @@
     },
     {
       "id": "gridcraft",
-      "name": "MS Excel",
+      "name": "GridCraft",
       "icon": "📗",
       "type": "web",
       "cat": "Office",
@@ -105,7 +105,7 @@
     },
     {
       "id": "jspaint",
-      "name": "MS Paint",
+      "name": "Paint (jspaint)",
       "icon": "🎨",
       "type": "web",
       "cat": "Creative",
@@ -149,7 +149,7 @@
     },
     {
       "id": "emulator",
-      "name": "Retro Games",
+      "name": "Retro Emulator",
       "icon": "🕹️",
       "type": "web",
       "cat": "Games",
@@ -159,8 +159,19 @@
       "h": 640
     },
     {
+      "id": "mcclassic",
+      "name": "Minecraft Classic",
+      "icon": "⛏️",
+      "type": "web",
+      "cat": "Games",
+      "desc": "Official free browser version from Mojang. Use ↗ if it stays blank.",
+      "url": "https://classic.minecraft.net",
+      "w": 960,
+      "h": 640
+    },
+    {
       "id": "deckcraft",
-      "name": "MS PowerPoint",
+      "name": "DeckCraft",
       "icon": "📙",
       "type": "web",
       "cat": "Office",
@@ -171,7 +182,7 @@
     },
     {
       "id": "pdfcraft",
-      "name": "Adobe Reader",
+      "name": "PdfCraft",
       "icon": "📕",
       "type": "web",
       "cat": "Office",
@@ -182,7 +193,7 @@
     },
     {
       "id": "photocraft",
-      "name": "Photoshop",
+      "name": "PhotoCraft",
       "icon": "📸",
       "type": "web",
       "cat": "Creative",
@@ -193,7 +204,7 @@
     },
     {
       "id": "lightcraft",
-      "name": "Lightroom",
+      "name": "LightCraft",
       "icon": "💡",
       "type": "web",
       "cat": "Creative",
@@ -204,7 +215,7 @@
     },
     {
       "id": "vectorcraft",
-      "name": "Illustrator",
+      "name": "VectorCraft",
       "icon": "✒️",
       "type": "web",
       "cat": "Creative",
@@ -215,7 +226,7 @@
     },
     {
       "id": "designcraft",
-      "name": "InDesign",
+      "name": "DesignCraft",
       "icon": "📐",
       "type": "web",
       "cat": "Creative",
@@ -226,7 +237,7 @@
     },
     {
       "id": "effectcraft",
-      "name": "After Effects",
+      "name": "EffectCraft",
       "icon": "✨",
       "type": "web",
       "cat": "Creative",
@@ -237,7 +248,7 @@
     },
     {
       "id": "filmcraft",
-      "name": "Premiere",
+      "name": "FilmCraft",
       "icon": "🎬",
       "type": "web",
       "cat": "Media",
@@ -259,13 +270,24 @@
     },
     {
       "id": "cadcraft",
-      "name": "AutoCAD",
+      "name": "CADCraft",
       "icon": "🏗️",
       "type": "web",
       "cat": "Engineering",
       "desc": "2D and 3D CAD drafting (AutoCAD alternative). By ArtCraft, Rust/WebAssembly. Needs a modern browser and GPU.",
       "url": "apps/cadcraft/index.html",
       "w": 1100,
+      "h": 680
+    },
+    {
+      "id": "browserlab",
+      "name": "Browser Lab (experimental)",
+      "icon": "🧪",
+      "type": "web",
+      "cat": "Experimental",
+      "desc": "Third-party demo (KTibow/browser-port-experiments): full browsers like Ladybird run inside the page via x86 emulation. Heavy and slow, and it reaches the internet through a relay server run by that project. Use ↗ if blank.",
+      "url": "https://kendell.dev/browser-port-experiments/",
+      "w": 1000,
       "h": 680
     }
   ]
