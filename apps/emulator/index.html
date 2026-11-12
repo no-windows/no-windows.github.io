@@ -54,27 +54,25 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
 <div id="game"></div>
 
 <script>
-    EJS_player = "#game";
-    EJS_core = "psp";
-    EJS_threads = true;
-    EJS_gameUrl = "roms/game.iso";
-    EJS_pathtodata = "data/";
-</script>
-<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
-
-<script>
 const CDN='https://cdn.emulatorjs.org/stable/data/';
 const SYS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy / Color',gba:'Game Boy Advance',n64:'Nintendo 64',nds:'Nintendo DS',segaMD:'Sega Mega Drive',segaMS:'Sega Master System',segaGG:'Sega Game Gear',atari2600:'Atari 2600',psx:'PlayStation',psp:'PlayStation Portable'};
-const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',a26:'atari2600',cue:'psx',chd:'psx',pbp:'psx',bin:'psx',iso:'psp'};
+const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',a26:'atari2600',cue:'psx',chd:'psx',pbp:'psx',bin:'psx',iso:'psp',cso:'psp'};
 const $=s=>document.querySelector(s),msg=t=>$('#msg').textContent=t||'';
 $('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 const extOf=n=>(n.split('.').pop()||'').toLowerCase();
 
 function start(url,core,name){
   $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
-  Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0'});
+  Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0',EJS_threads:(core === 'psp')});
   const s=document.createElement('script');s.src=CDN+'loader.js';
   s.onerror=()=>{location.reload()};
+  console.log("CORE", window.EJS_core);
+  console.log("THREADS", window.EJS_threads);
+  
+  setTimeout(() => {
+      console.log("AFTER LOAD", window.EJS_threads);
+  }, 1000);
+
   document.body.appendChild(s);
 }
 function playFile(f){
