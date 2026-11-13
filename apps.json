@@ -164,7 +164,7 @@
       "icon": "📺",
       "type": "web",
       "cat": "Media",
-      "desc": "Browse worldwide TV channels by region, country, language, and genre, and play available broadcaster-hosted HLS streams in the app.",
+      "desc": "Browse worldwide TV channels by region, country, language, and genre, and play listed streams in the app.",
       "url": "apps/channel-atlas/index.html",
       "w": 1100,
       "h": 720

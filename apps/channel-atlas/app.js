@@ -60,7 +60,7 @@ function safeStream(value) {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" && /\.m3u8$/i.test(url.pathname) ? url.href : null;
+    return ["https:", "http:"].includes(url.protocol) ? url.href : null;
   } catch {
     return null;
   }
@@ -99,9 +99,9 @@ function channelCard(channel) {
   const mark = document.createElement("span");
   mark.className = "channel-mark";
   mark.setAttribute("aria-hidden", "true");
-  mark.textContent = channel.name.trim().charAt(0).toUpperCase() || "TV";
+  mark.textContent = (channel.name || "").trim().charAt(0).toUpperCase() || "TV";
   const heading = document.createElement("h2");
-  heading.textContent = channel.name;
+  heading.textContent = channel.name || "Unnamed stream";
   title.append(mark, heading);
   card.append(title);
 
@@ -114,9 +114,9 @@ function channelCard(channel) {
 
   const tags = document.createElement("div");
   tags.className = "tags";
-  const country = state.countries.get(channel.country);
+  const country = channel.country ? state.countries.get(channel.country) : null;
   if (country) tags.append(createTag(`${country.flag || ""} ${country.name}`.trim()));
-  for (const code of channel.languageCodes.slice(0, 3)) {
+  for (const code of (channel.languageCodes || []).slice(0, 3)) {
     tags.append(createTag(displayName(state.languages, code)));
   }
   for (const code of (channel.categories || []).slice(0, 2)) {
@@ -140,7 +140,7 @@ function channelCard(channel) {
     unavailable.className = "play-button";
     unavailable.type = "button";
     unavailable.disabled = true;
-    unavailable.textContent = "No public HLS stream";
+    unavailable.textContent = "No stream listed";
     foot.append(unavailable);
   }
   card.append(foot);
@@ -152,16 +152,16 @@ function matches(channel, query) {
   const selectedRegion = state.regions.get(region);
   if (selectedRegion && !selectedRegion.countries.includes(channel.country)) return false;
   if (country && channel.country !== country) return false;
-  if (language && !channel.languageCodes.includes(language)) return false;
+  if (language && !(channel.languageCodes || []).includes(language)) return false;
   if (genre && !(channel.categories || []).includes(genre)) return false;
   if (!query) return true;
 
   const searchable = [
-    channel.name,
-    channel.network,
+    channel.name || "",
+    channel.network || "",
     ...(channel.alt_names || []),
-    channel.countryName,
-    ...channel.languageCodes.map(code => displayName(state.languages, code)),
+    channel.countryName || "",
+    ...(channel.languageCodes || []).map(code => displayName(state.languages, code)),
     ...(channel.categories || []).map(code => displayName(state.categories, code))
   ].join(" ").toLocaleLowerCase();
   return searchable.includes(query);
@@ -299,7 +299,17 @@ function openPlayer(channel) {
   elements.playerTitle.textContent = channel.name;
   elements.streamChoice.replaceChildren();
   streams.forEach((stream, index) => {
-    const label = [stream.quality, stream.title].filter(Boolean).join(" · ") || `Stream ${index + 1}`;
+    const notes = [];
+    if (stream.official) notes.push("official");
+    if ((stream.labels || []).includes("Geo-blocked") || /geo-?blocked/i.test(stream.title || "")) {
+      notes.push("geo-blocked");
+    }
+    if (stream.referrer) notes.push("needs referrer");
+    if (stream.user_agent) notes.push("needs user-agent");
+    if (stream.url.startsWith("http:")) notes.push("http");
+    const label = [stream.quality, stream.title, notes.length ? `[${notes.join(", ")}]` : ""]
+      .filter(Boolean)
+      .join(" · ") || `Stream ${index + 1}`;
     option(elements.streamChoice, String(index), label);
   });
   elements.streamChoice.disabled = streams.length < 2;
@@ -337,9 +347,8 @@ async function loadDirectory() {
       languageCodes.set(feed.channel, current);
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const activeChannels = channels
-      .filter(channel => !channel.is_nsfw && !(channel.categories || []).includes("xxx") && (!channel.closed || channel.closed >= today))
+      .filter(channel => !channel.is_nsfw && !(channel.categories || []).includes("xxx"))
       .map(channel => {
         const country = state.countries.get(channel.country);
         return {
@@ -351,26 +360,47 @@ async function loadDirectory() {
 
     const activeById = new Map(activeChannels.map(channel => [channel.id, channel]));
     const streamsByChannel = new Map();
-    for (const stream of streams) {
-      const channel = activeById.get(stream.channel);
-      if (!channel || (stream.labels || []).includes("Geo-blocked")) continue;
-      if (stream.referrer || stream.user_agent) continue;
+    const orphanChannels = [];
+    for (const [index, stream] of streams.entries()) {
       const url = safeStream(stream.url);
-      if (!url || !isOfficialHost(channel, url)) continue;
-      const current = streamsByChannel.get(stream.channel) || [];
+      if (!url) continue;
+
+      const channel = stream.channel ? activeById.get(stream.channel) : null;
+      if (stream.channel && !channel) continue;
+
+      if (!channel) {
+        const orphan = {
+          id: `stream:${index}`,
+          name: stream.title || "Unnamed stream",
+          country: "",
+          countryName: "",
+          languageCodes: [],
+          categories: [],
+          alt_names: []
+        };
+        orphanChannels.push(orphan);
+        streamsByChannel.set(orphan.id, [{ ...stream, url, official: false }]);
+        continue;
+      }
+
+      const current = streamsByChannel.get(channel.id) || [];
       if (current.some(item => item.url === url)) continue;
-      current.push({ ...stream, url });
-      streamsByChannel.set(stream.channel, current);
+      current.push({
+        ...stream,
+        url,
+        official: channel.website ? isOfficialHost(channel, url) : false
+      });
+      streamsByChannel.set(channel.id, current);
     }
 
     for (const channelStreams of streamsByChannel.values()) {
       channelStreams.sort((a, b) => {
         const height = quality => Number.parseInt(String(quality || "").match(/\d+/)?.[0] || "0", 10);
-        return height(b.quality) - height(a.quality);
+        return (b.official - a.official) || (height(b.quality) - height(a.quality));
       });
     }
     state.streams = streamsByChannel;
-    state.channels = activeChannels.sort((a, b) => a.name.localeCompare(b.name));
+    state.channels = [...activeChannels, ...orphanChannels].sort((a, b) => a.name.localeCompare(b.name));
 
     state.visibleCount = PAGE_SIZE;
     setupFilters();
