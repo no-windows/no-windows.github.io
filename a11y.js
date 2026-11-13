@@ -183,6 +183,7 @@ function onFocus(e) {
   if (!el || el.nodeType !== 1 || /^(BODY|HTML)$/.test(el.tagName)) return;
   clearTimeout(fT);
   fT = setTimeout(() => {
+    if (!visible(el)) return;
     vc = el; showCursor(el);
     if (el === skipNext) { skipNext = null; return }
     snd.focus(); speak(describe(el));
@@ -191,7 +192,7 @@ function onFocus(e) {
 function onHover(e) {
   if (!cfg.on || !cfg.hover) return; clearTimeout(hoverT);
   const t = e.target.closest && e.target.closest(INTERACTIVE + ',h1,h2,h3,[role]');
-  if (!t) return; hoverT = setTimeout(() => { vc = t; showCursor(t); speak(describe(t)) }, 350);
+  if (!t) return; hoverT = setTimeout(() => { if (!visible(t)) return; vc = t; showCursor(t); speak(describe(t)) }, 350);
 }
 const winTitle = w => clean(($('.title .t', w) || {}).textContent || 'Window');
 function visibleWins() { return $$('.win').filter(w => !w.classList.contains('min')).sort((a, b) => (+b.style.zIndex || 0) - (+a.style.zIndex || 0)) }
@@ -242,7 +243,26 @@ function scopeRoot() {
   if (w) { const f = $('iframe', w), d = f && frameDoc(f); if (d) return d.body; if (f) return null; return $('.body', w) || w }
   return document.body;
 }
-function visible(el) { const r = el.getBoundingClientRect(); const cs = el.ownerDocument.defaultView.getComputedStyle(el); return (r.width > 0 || r.height > 0) && cs.visibility !== 'hidden' && cs.display !== 'none' && el.getAttribute('aria-hidden') !== 'true' }
+function visible(el) {
+  const doc = el.ownerDocument, view = doc.defaultView, r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return false;
+  let left = Math.max(0, r.left), top = Math.max(0, r.top);
+  let right = Math.min(view.innerWidth, r.right), bottom = Math.min(view.innerHeight, r.bottom);
+  for (let node = el; node && node.nodeType === 1; node = node.parentElement) {
+    const cs = view.getComputedStyle(node);
+    if (node.hidden || node.inert || node.getAttribute('aria-hidden') === 'true' || cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse' || cs.contentVisibility === 'hidden' || Number(cs.opacity) === 0) return false;
+    if (node !== el) {
+      const clipsX = cs.overflowX !== 'visible', clipsY = cs.overflowY !== 'visible';
+      if (clipsX || clipsY) {
+        const clip = node.getBoundingClientRect();
+        if (clipsX) { left = Math.max(left, clip.left + node.clientLeft); right = Math.min(right, clip.left + node.clientLeft + node.clientWidth) }
+        if (clipsY) { top = Math.max(top, clip.top + node.clientTop); bottom = Math.min(bottom, clip.top + node.clientTop + node.clientHeight) }
+      }
+    }
+    if (right <= left || bottom <= top) return false;
+  }
+  return true;
+}
 function items(root) {
   const all = $$(CAND, root).filter(visible);
   return all.filter(el => el.matches(INTERACTIVE) || !all.some(o => o !== el && el.contains(o))).filter(el => nameOf(el) || el.matches(INTERACTIVE));
