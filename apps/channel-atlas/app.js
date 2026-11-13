@@ -66,6 +66,10 @@ function safeStream(value) {
   }
 }
 
+function isBlockedMixedContent(streamUrl, pageProtocol = window.location.protocol) {
+  return pageProtocol === "https:" && new URL(streamUrl).protocol === "http:";
+}
+
 function isOfficialHost(channel, streamUrl) {
   try {
     const website = new URL(channel.website);
@@ -261,6 +265,10 @@ function playStream(stream) {
   const url = safeStream(stream.url);
   if (!url) {
     playbackFailure();
+    return;
+  }
+  if (isBlockedMixedContent(url)) {
+    elements.playerStatus.textContent = "This HTTP stream is blocked on secure pages. Select an HTTPS stream if available.";
     return;
   }
 
