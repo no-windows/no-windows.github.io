@@ -3,6 +3,7 @@ import Play from './Play.js';
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
 const status = $('#status');
+const fps = $('#fps');
 const romInput = $('#rom');
 const canvas = $('#outputCanvas');
 const CHUNK_SIZE = 1024 * 1024;
@@ -10,6 +11,19 @@ const MAX_CACHED_CHUNKS = 8;
 
 function showStatus(message) {
   status.textContent = message;
+}
+
+function monitorFps(module) {
+  if (typeof module.getFrames !== 'function' || typeof module.clearStats !== 'function') {
+    fps.textContent = 'FPS unavailable';
+    console.error('Play! runtime does not expose its FPS counters.');
+    return;
+  }
+  module.clearStats();
+  setInterval(() => {
+    fps.textContent = `FPS: ${module.getFrames()}`;
+    module.clearStats();
+  }, 1000);
 }
 
 class DiscImageDevice {
@@ -125,6 +139,7 @@ async function initialize() {
   playModule.FS.mkdir('/work');
   playModule.discImageDevice = new DiscImageDevice(playModule);
   playModule.ccall('initVm', '', [], []);
+  monitorFps(playModule);
   showStatus('Ready. Choose a PS2 game file.');
   return playModule;
 }
