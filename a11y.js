@@ -257,7 +257,10 @@ function move(dir, filterFn) {
   if (idx === -1) { idx = list.findIndex(el => !!(start && start.compareDocumentPosition && (start.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING))); idx = dir > 0 ? (idx === -1 ? 0 : idx) : (idx === -1 ? list.length - 1 : Math.max(0, idx - 1)) }
   else idx += dir;
   if (idx < 0 || idx >= list.length) { speak(idx < 0 ? 'Top' : 'End'); snd.edge(); return }
-  const el = list[idx]; vc = el; el.scrollIntoView({ block: 'nearest' }); showCursor(el); snd.focus(); speak(describe(el));
+  const el = list[idx]; vc = el; el.scrollIntoView({ block: 'nearest' });
+  if (!el.hasAttribute('tabindex') && !/^(BUTTON|INPUT|A|TEXTAREA|SELECT|SUMMARY)$/.test(el.tagName)) el.setAttribute('tabindex', '-1');
+  if (el.ownerDocument.activeElement !== el) { skipNext = el; el.focus({ preventScroll: true }) }
+  showCursor(el); snd.focus(); speak(describe(el));
 }
 function readAll() {
   const root = scopeRoot(); if (!root) { speak('The content of this window cannot be read by the screen reader.'); return }
