@@ -1,1 +1,2 @@
 apps/emulator/roms/Tekken3.bin filter=lfs diff=lfs merge=lfs -text
+apps/emulator/roms/Tekken3.chd filter=lfs diff=lfs merge=lfs -text
