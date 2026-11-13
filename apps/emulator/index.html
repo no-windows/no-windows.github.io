@@ -21,8 +21,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
 .g a{color:#4cc2ff;font-size:12px;margin-left:8px}
 #msg{color:#ffb4a8;margin-top:8px;min-height:18px;font-size:13px}
 .note{color:#9aa;font-size:12px;line-height:1.6}
-#game{position:fixed;inset:0;background:#000;display:none}
-#game .ps2-frame{display:block;width:100%;height:100%;border:0;background:#000}
+#game{inset:0;background:#000}
 #back{position:fixed;top:6px;left:6px;z-index:2147483000;display:none;opacity:.75}
 </style>
 <script src="../../a11y.js"></script>
@@ -30,7 +29,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
 <body>
 <div id="home">
   <h1>🕹️ Retro Emulator</h1>
-  <div class="sub">Powered by EmulatorJS and Play! WebAssembly. Runs entirely in your browser.</div>
+  <div class="sub">Powered by EmulatorJS (GPL-3.0). Runs entirely in your browser.</div>
 
   <div class="box">
     <h2>Play your own game file</h2>
@@ -45,55 +44,25 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
   </div>
 
   <div class="box">
-    <h2>Game library</h2>
+    <h2>Free games (homebrew)</h2>
     <div class="games" id="games"></div>
-    <p class="note">Homebrew games are freely distributable. Local games stay in <code>apps/emulator/roms/</code> and are not bundled; only use games you own or can distribute.</p>
+    <p class="note">These are freely distributable games. Download each ROM from its page and save it into <code>apps/emulator/roms/</code> using the file name shown (or edit <code>games.json</code> to use a direct-download URL that allows cross-origin requests).</p>
   </div>
 
-  <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, PlayStation, PSP, and PlayStation 2. PS2 and PSP use a service worker to enable required browser isolation on compatible secure sites; first launch may reload once.</p>
+  <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, Atari 2600, PlayStation. N64, DS and PlayStation need a fairly fast device.</p>
 </div>
 <button id="back" onclick="location.reload()">← Back</button>
 <div id="game"></div>
 
 <script>
 const CDN='https://cdn.emulatorjs.org/stable/data/';
-const SYS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy / Color',gba:'Game Boy Advance',n64:'Nintendo 64',nds:'Nintendo DS',segaMD:'Sega Mega Drive',segaMS:'Sega Master System',segaGG:'Sega Game Gear',atari2600:'Atari 2600',psx:'PlayStation',psp:'PlayStation Portable',ps2:'PlayStation 2'};
+const SYS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy / Color',gba:'Game Boy Advance',n64:'Nintendo 64',nds:'Nintendo DS',segaMD:'Sega Mega Drive',segaMS:'Sega Master System',segaGG:'Sega Game Gear',atari2600:'Atari 2600',psx:'PlayStation',psp:'PlayStation Portable'};
 const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',a26:'atari2600',cue:'psx',chd:'psx',pbp:'psx',bin:'psx',iso:'psp',cso:'psp'};
 const $=s=>document.querySelector(s),msg=t=>$('#msg').textContent=t||'';
-const EMULATOR_RESUME_KEY='emulator-launch-after-isolation';
 $('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 const extOf=n=>(n.split('.').pop()||'').toLowerCase();
 
-async function enableEmulatorIsolation({url,name,file,core}={}){
-  if(!window.isSecureContext||!('serviceWorker' in navigator)){
-    msg('This emulator needs a secure browser with service worker support to enable cross-origin isolation.');
-    return;
-  }
-  try{
-    sessionStorage.setItem(EMULATOR_RESUME_KEY,JSON.stringify({url:file?'':url||'',name:name||'',core,needsFile:!!file}));
-    const scope=new URL('./',location.href).pathname;
-    await navigator.serviceWorker.register(new URL('coi-serviceworker.js',location.href),{scope,updateViaCache:'none'});
-    await navigator.serviceWorker.ready;
-    if(!navigator.serviceWorker.controller){
-      await new Promise((resolve,reject)=>{
-        const timeout=setTimeout(()=>reject(new Error('The isolation service did not take control of this page.')),10000);
-        navigator.serviceWorker.addEventListener('controllerchange',()=>{clearTimeout(timeout);resolve()},{once:true});
-      });
-    }
-    msg('Enabling browser isolation. The page will reload once…');
-    location.reload();
-  }catch(error){
-    sessionStorage.removeItem(EMULATOR_RESUME_KEY);
-    msg(`Could not enable browser isolation: ${error.message}. Check that service workers are allowed, then reload.`);
-    console.error('Emulator browser isolation setup failed:',error);
-  }
-}
-
-function start(url,core,name,file){
-  if(core === 'psp' && (!window.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined')){
-    void enableEmulatorIsolation({url,name,file,core});
-    return;
-  }
+function start(url,core,name){
   $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
   Object.assign(window,{EJS_player:'#game',EJS_core:core,EJS_gameUrl:url,EJS_gameName:name.replace(/\.[^.]+$/,''),EJS_pathtodata:CDN,EJS_startOnLoaded:true,EJS_color:'#0067c0',EJS_threads:(core === 'psp')});
   const s=document.createElement('script');s.src=CDN+'loader.js';
@@ -107,35 +76,12 @@ function start(url,core,name,file){
 
   document.body.appendChild(s);
 }
-function startPS2({file,url,name}={}){
-  if(!window.crossOriginIsolated||typeof SharedArrayBuffer==='undefined'){
-    void enableEmulatorIsolation({file,url,name,core:'ps2'});
-    return;
-  }
-  $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
-  const frame=document.createElement('iframe');
-  frame.className='ps2-frame';
-  frame.title='PlayStation 2 emulator';
-  frame.addEventListener('load',()=>{
-    if(file)frame.contentWindow.postMessage({type:'ps2-file',file},location.origin);
-  },{once:true});
-  const params=new URLSearchParams();
-  if(url)params.set('game',url);
-  if(name)params.set('name',name);
-  const query=params.toString();
-  frame.src='play/index.html'+(query?'?'+query:'');
-  $('#game').replaceChildren(frame);
-}
 function playFile(f){
-  if($('#sys').value==='ps2'){
-    startPS2({file:f});
-    return;
-  }
   if(!f){msg('Choose a game file first.');return}
   const core=$('#sys').value||EXT[extOf(f.name)];
   if(!core){msg('Could not tell the system from ".'+extOf(f.name)+'". Pick it from the list.');return}
   if(/\.(zip|7z|rar)$/i.test(f.name)&&!$('#sys').value){msg('Archives need the system picked from the list.');return}
-  start(URL.createObjectURL(f)+'#'+encodeURIComponent(f.name),core,f.name,f);
+  start(URL.createObjectURL(f)+'#'+encodeURIComponent(f.name),core,f.name);
 }
 $('#go').onclick=()=>playFile($('#file').files[0]);
 const d=$('#drop');
@@ -144,36 +90,12 @@ const d=$('#drop');
 d.addEventListener('drop',ev=>playFile(ev.dataTransfer.files[0]));
 
 fetch('games.json',{cache:'no-cache'}).then(r=>r.json()).then(list=>{
-  $('#games').innerHTML=list.map((g,i)=>`<div class="g"><b>${g.name}</b><small>${SYS[g.system]||g.system} · ${g.license}</small><button class="pri" data-i="${i}">Play</button>${g.info?`<a href="${g.info}" target="_blank" rel="noopener">Get ROM ↗</a>`:''}</div>`).join('');
+  $('#games').innerHTML=list.map((g,i)=>`<div class="g"><b>${g.name}</b><small>${SYS[g.system]||g.system} · ${g.license}</small><button class="pri" data-i="${i}">Play</button><a href="${g.info}" target="_blank" rel="noopener">Get ROM ↗</a></div>`).join('');
   $('#games').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const g=list[b.dataset.i],romUrl=new URL(g.rom,document.baseURI).href;
-    if(g.system==='ps2'){startPS2({url:romUrl,name:g.name});return}
     try{const r=await fetch(romUrl,{method:'HEAD'});if(!r.ok){msg('Game file request failed ('+r.status+'). Check the ROM URL and host permissions.');return}}
     catch(err){msg('Could not access the game file. Check the URL and that its host allows cross-origin requests (CORS).');console.error('Game file request failed:',err);return}
     start(romUrl,g.system,g.name)};
 }).catch(()=>{$('#games').textContent='games.json not found.'});
-
-let pendingEmulator;
-try{
-  pendingEmulator=sessionStorage.getItem(EMULATOR_RESUME_KEY);
-  sessionStorage.removeItem(EMULATOR_RESUME_KEY);
-}catch(error){
-  console.error('Could not restore the pending emulator launch:',error);
-}
-if(pendingEmulator){
-  try{
-    const launch=JSON.parse(pendingEmulator);
-    if(window.crossOriginIsolated&&typeof SharedArrayBuffer!=='undefined'){
-      if(launch.core==='ps2'&&launch.url)startPS2(launch);
-      else if(launch.core==='psp'&&launch.url)start(launch.url,'psp',launch.name||'Game');
-      else if(launch.needsFile)msg('Browser isolation is enabled. Re-select your game file and choose the same system.');
-    }else{
-      msg('This browser could not enable the cross-origin isolation required by this emulator. Use a secure browser that supports service workers.');
-    }
-  }catch(error){
-    msg('Could not restore the game after enabling browser isolation.');
-    console.error('Could not resume emulator launch:',error);
-  }
-}
 </script>
 </body>
 </html>
