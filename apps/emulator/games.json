@@ -4,5 +4,5 @@
   {"name":"Grand Theft Auto Advance (USA)","system":"gba","rom":"roms/GrandTheftAutoAdvance.gba","license":"GBA ","info":""},
   {"name":"Tekken 3","system":"psx","rom":"https://media.githubusercontent.com/media/no-windows/no-windows.github.io/refs/heads/main/apps/emulator/roms/Tekken3.chd","license":"GBA ","info":""},
   {"name":"Need for Speed - Most Wanted","system":"gba","rom":"roms/NeedforSpeed-MostWanted.gba","license":"GBA ","info":""},
-  {"name":"Cricket 07","system":"ps2","rom":"roms/Cricket07.iso","license":"User-provided local file","info":""}
+  {"name":"Cricket 07","system":"ps2","rom":"https://github.com/no-windows/no-windows.github.io/raw/refs/heads/main/apps/emulator/roms/Cricket07.iso","license":"User-provided local file","info":""}
 ]
