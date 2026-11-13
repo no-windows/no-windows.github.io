@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101522">
+  <title>Net Mirror</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <p class="eyebrow">NET MIRROR</p>
+      <h1>Search movies and TV</h1>
+      <p class="coming-soon">Free Netflix, Prime, JioHotstar, Sony, ZeeTV, etc coming soon.</p>
+    </header>
+
+    <form id="search-form" role="search">
+      <label for="search-query">Title</label>
+      <div class="search-row">
+        <input id="search-query" type="search" maxlength="100" placeholder="Search a movie or show" autocomplete="off" required>
+        <button id="search-button" type="submit">Search</button>
+      </div>
+    </form>
+
+    <p id="search-status" class="status" role="status" aria-live="polite">Search IMDb titles. Results are metadata only.</p>
+    <ul id="results" class="results" aria-label="Search results"></ul>
+
+    <footer>Search terms are sent to IMDb through the public CORS proxy used by the linked project. This page displays metadata only; it does not provide playback.</footer>
+  </main>
+</body>
+</html>

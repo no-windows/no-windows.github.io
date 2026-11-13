@@ -170,6 +170,17 @@
       "h": 720
     },
     {
+      "id": "cloud-stream",
+      "name": "Net Mirror",
+      "icon": "☁️",
+      "type": "web",
+      "cat": "Media",
+      "desc": "Search IMDb for movie and TV metadata. No streaming or playback.",
+      "url": "apps/cloud-stream/index.html",
+      "w": 1100,
+      "h": 720
+    },
+    {
       "id": "mcclassic",
       "name": "Minecraft Classic",
       "icon": "⛏️",
