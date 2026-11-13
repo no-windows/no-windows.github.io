@@ -6,6 +6,7 @@ Bundled (static WebAssembly builds from GitHub Releases, all MIT OR Apache-2.0):
 - wordcraft 0.16.0, gridcraft 0.17.0, deckcraft 0.16.0, pdfcraft 0.19.0, photocraft 0.21.0, lightcraft 0.19.0,
   vectorcraft 0.22.0, designcraft 0.18.0, effectcraft 0.22.0, filmcraft 0.18.0, soundcraft 0.18.0, cadcraft 0.18.0
 - emulator/  - Retro Emulator front end using EmulatorJS (GPL-3.0) loaded from its CDN
+- channel-atlas/ - Worldwide TV directory with in-app playback for HTTPS HLS streams hosted on the listed broadcaster's own domain; excludes geo-blocked and custom-header streams
 
 ## Add another app
 1. Copy a static build into `apps/<name>/` (it must contain an `index.html` and use relative URLs).

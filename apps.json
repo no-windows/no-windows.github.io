@@ -159,6 +159,17 @@
       "h": 640
     },
     {
+      "id": "channel-atlas",
+      "name": "Channel Atlas",
+      "icon": "📺",
+      "type": "web",
+      "cat": "Media",
+      "desc": "Browse worldwide TV channels by region, country, language, and genre, and play available broadcaster-hosted HLS streams in the app.",
+      "url": "apps/channel-atlas/index.html",
+      "w": 1100,
+      "h": 720
+    },
+    {
       "id": "mcclassic",
       "name": "Minecraft Classic",
       "icon": "⛏️",
