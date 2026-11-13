@@ -4,21 +4,14 @@ A browser-based Windows 11 desktop simulation built with HTML, CSS, and JavaScri
 
 ## Run locally
 
-Requires Python 3. From the repository directory, run:
-
-```powershell
-python serve.py
-```
-
-Then open <http://127.0.0.1:8765>. The local server binds to loopback and provides the isolation headers and byte-range responses required by the emulators.
+Serve the repository over HTTP on `localhost`, or open the deployed HTTPS site. Do not open the pages directly with `file://`.
 
 ## Apps and emulator
 
 - The app catalog is defined in `apps.json`; app files are in `apps/`.
 - The Retro Emulator is at `apps/emulator/`. Its catalog is `apps/emulator/games.json`.
 - Most systems use EmulatorJS from its CDN. PlayStation 2 uses the self-hosted Play! WebAssembly runtime in `apps/emulator/play/`.
-- PS2 emulation requires cross-origin isolation. On GitHub Pages, the emulator uses a service worker to add the required headers on compatible secure browsers; the first PS2 launch may reload the page once. If that is unavailable, run the site locally with `python serve.py`.
-- PSP emulation also requires cross-origin isolation. Use the local server because GitHub Pages does not allow custom response headers for PSP.
+- PS2 and PSP emulation require cross-origin isolation. On compatible secure browsers, the emulator enables it with a service worker on first launch, which may reload the page once.
 - Local game files are opened in the browser and are not uploaded by the emulator. Only use game files you own or are authorized to distribute.
 
 ## GitHub Pages

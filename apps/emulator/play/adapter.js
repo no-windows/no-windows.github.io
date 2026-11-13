@@ -129,7 +129,7 @@ class RangeDiscFile {
 
 async function initialize() {
   if (!crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
-    throw new Error('This browser or host could not enable the cross-origin isolation Play! needs. Try a compatible browser or run this site with python serve.py locally.');
+    throw new Error('This browser or host could not enable the cross-origin isolation Play! needs. Use a secure browser that supports service workers.');
   }
   const baseURL = new URL('./', import.meta.url);
   const playModule = await Play({
