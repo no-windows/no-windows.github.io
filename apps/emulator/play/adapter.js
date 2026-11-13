@@ -118,7 +118,7 @@ class RangeDiscFile {
     const response = await fetch(this.url, { headers: { Range: `bytes=${start}-${end}` } });
     const contentRange = response.headers.get('Content-Range') || '';
     const expectedRange = `bytes ${start}-${end}/${this.size}`;
-    if (response.status !== 206 || contentRange !== expectedRange) {
+    if (response.status !== 206 || (contentRange && contentRange !== expectedRange)) {
       throw new Error('The game host must support HTTP byte-range requests to stream this ISO.');
     }
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -129,7 +129,7 @@ class RangeDiscFile {
 
 async function initialize() {
   if (!crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
-    throw new Error('PlayStation 2 requires COOP/COEP headers. Run this site with python serve.py locally; GitHub Pages does not provide these headers.');
+    throw new Error('This browser or host could not enable the cross-origin isolation Play! needs. Try a compatible browser or run this site with python serve.py locally.');
   }
   const baseURL = new URL('./', import.meta.url);
   const playModule = await Play({
@@ -169,7 +169,8 @@ async function bootCatalogGame(url, title) {
   if (!response.ok) throw new Error(`Game file request failed (${response.status}).`);
   const size = Number(response.headers.get('Content-Length'));
   if (!Number.isSafeInteger(size) || size <= 0) throw new Error('The game host did not report a valid file size.');
-  if (response.headers.get('Accept-Ranges') !== 'bytes') {
+  const rangeProbe = await fetch(url, { headers: { Range: 'bytes=0-0' } });
+  if (rangeProbe.status !== 206 || (await rangeProbe.arrayBuffer()).byteLength !== 1) {
     throw new Error('The game host must support HTTP byte-range requests to stream this ISO.');
   }
 

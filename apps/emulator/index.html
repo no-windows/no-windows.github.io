@@ -50,7 +50,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
     <p class="note">Homebrew games are freely distributable. Local games stay in <code>apps/emulator/roms/</code> and are not bundled; only use games you own or can distribute.</p>
   </div>
 
-  <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, PlayStation, PSP, and PlayStation 2. PS2 and PSP require COOP/COEP headers; run <code>python serve.py</code> locally. GitHub Pages does not provide these headers.</p>
+  <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, PlayStation, PSP, and PlayStation 2. PS2 uses a service worker to enable required browser isolation on compatible secure sites; first launch may reload once. PSP requires COOP/COEP headers, so run <code>python serve.py</code> locally.</p>
 </div>
 <button id="back" onclick="location.reload()">← Back</button>
 <div id="game"></div>
@@ -60,8 +60,34 @@ const CDN='https://cdn.emulatorjs.org/stable/data/';
 const SYS={nes:'Nintendo NES',snes:'Super Nintendo',gb:'Game Boy / Color',gba:'Game Boy Advance',n64:'Nintendo 64',nds:'Nintendo DS',segaMD:'Sega Mega Drive',segaMS:'Sega Master System',segaGG:'Sega Game Gear',atari2600:'Atari 2600',psx:'PlayStation',psp:'PlayStation Portable',ps2:'PlayStation 2'};
 const EXT={nes:'nes',sfc:'snes',smc:'snes',gb:'gb',gbc:'gb',gba:'gba',z64:'n64',n64:'n64',v64:'n64',nds:'nds',md:'segaMD',gen:'segaMD',smd:'segaMD',sms:'segaMS',gg:'segaGG',a26:'atari2600',cue:'psx',chd:'psx',pbp:'psx',bin:'psx',iso:'psp',cso:'psp'};
 const $=s=>document.querySelector(s),msg=t=>$('#msg').textContent=t||'';
+const PS2_RESUME_KEY='ps2-launch-after-isolation';
 $('#sys').innerHTML+=Object.entries(SYS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
 const extOf=n=>(n.split('.').pop()||'').toLowerCase();
+
+async function enablePS2Isolation({url,name,file}={}){
+  if(!window.isSecureContext||!('serviceWorker' in navigator)){
+    msg('Play! needs cross-origin isolation. Use HTTPS in a compatible browser or run this site with python serve.py locally.');
+    return;
+  }
+  try{
+    sessionStorage.setItem(PS2_RESUME_KEY,JSON.stringify({url:url||'',name:name||'',needsFile:!!file}));
+    const scope=new URL('./',location.href).pathname;
+    await navigator.serviceWorker.register(new URL('coi-serviceworker.js',location.href),{scope,updateViaCache:'none'});
+    await navigator.serviceWorker.ready;
+    if(!navigator.serviceWorker.controller){
+      await new Promise((resolve,reject)=>{
+        const timeout=setTimeout(()=>reject(new Error('The isolation service did not take control of this page.')),10000);
+        navigator.serviceWorker.addEventListener('controllerchange',()=>{clearTimeout(timeout);resolve()},{once:true});
+      });
+    }
+    msg('Enabling Play! browser isolation. The page will reload once…');
+    location.reload();
+  }catch(error){
+    sessionStorage.removeItem(PS2_RESUME_KEY);
+    msg(`Could not enable browser isolation: ${error.message}. Run this site with python serve.py locally.`);
+    console.error('PS2 browser isolation setup failed:',error);
+  }
+}
 
 function start(url,core,name){
   if(core === 'psp' && (!window.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined')){
@@ -83,7 +109,7 @@ function start(url,core,name){
 }
 function startPS2({file,url,name}={}){
   if(!window.crossOriginIsolated||typeof SharedArrayBuffer==='undefined'){
-    msg('PlayStation 2 requires COOP/COEP headers for threaded emulation. Run this site with python serve.py locally; GitHub Pages does not provide these headers.');
+    void enablePS2Isolation({file,url,name});
     return;
   }
   $('#home').style.display='none';$('#game').style.display='block';$('#back').style.display='block';
@@ -125,6 +151,18 @@ fetch('games.json',{cache:'no-cache'}).then(r=>r.json()).then(list=>{
     catch(err){msg('Could not access the game file. Check the URL and that its host allows cross-origin requests (CORS).');console.error('Game file request failed:',err);return}
     start(romUrl,g.system,g.name)};
 }).catch(()=>{$('#games').textContent='games.json not found.'});
+
+const pendingPS2=sessionStorage.getItem(PS2_RESUME_KEY);
+if(pendingPS2){
+  sessionStorage.removeItem(PS2_RESUME_KEY);
+  if(window.crossOriginIsolated&&typeof SharedArrayBuffer!=='undefined'){
+    const launch=JSON.parse(pendingPS2);
+    if(launch.url)startPS2(launch);
+    else if(launch.needsFile)msg('Browser isolation is enabled. Re-select your PS2 game file and click Play.');
+  }else{
+    msg('This browser or host could not enable the isolation Play! needs. Run this site with python serve.py locally.');
+  }
+}
 </script>
 </body>
 </html>
