@@ -24,7 +24,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
 #game{inset:0;background:#000}
 #back{position:fixed;top:6px;left:6px;z-index:2147483000;display:none;opacity:.75}
 </style>
-<script src="a11y.js"></script>
+<script src="../../a11y.js"></script>
 </head>
 <body>
 <div id="home">
@@ -46,7 +46,7 @@ button{cursor:pointer}button.pri{background:#0067c0;border-color:#0067c0;color:#
   <div class="box">
     <h2>Free games (homebrew)</h2>
     <div class="games" id="games"></div>
-    <p class="note">These are freely distributable games. Download each ROM from its page and save it into <code>apps/emulator/roms/</code> using the file name shown (or edit <code>games.json</code>).</p>
+    <p class="note">These are freely distributable games. Download each ROM from its page and save it into <code>apps/emulator/roms/</code> using the file name shown (or edit <code>games.json</code> to use a direct-download URL that allows cross-origin requests).</p>
   </div>
 
   <p class="note">Supported here: NES, Super Nintendo, Game Boy / Color, GBA, N64, DS, Mega Drive, Master System, Game Gear, Atari 2600, PlayStation. N64, DS and PlayStation need a fairly fast device.</p>
@@ -91,10 +91,10 @@ d.addEventListener('drop',ev=>playFile(ev.dataTransfer.files[0]));
 
 fetch('games.json',{cache:'no-cache'}).then(r=>r.json()).then(list=>{
   $('#games').innerHTML=list.map((g,i)=>`<div class="g"><b>${g.name}</b><small>${SYS[g.system]||g.system} · ${g.license}</small><button class="pri" data-i="${i}">Play</button><a href="${g.info}" target="_blank" rel="noopener">Get ROM ↗</a></div>`).join('');
-  $('#games').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const g=list[b.dataset.i];
-    try{const r=await fetch(g.rom,{method:'HEAD'});if(!r.ok)throw 0}
-    catch(_){msg('ROM not found. Download it from the "Get ROM" link and save it as apps/emulator/'+g.rom);return}
-    start(g.rom,g.system,g.rom.split('/').pop())};
+  $('#games').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const g=list[b.dataset.i],romUrl=new URL(g.rom,document.baseURI).href;
+    try{const r=await fetch(romUrl,{method:'HEAD'});if(!r.ok){msg('Game file request failed ('+r.status+'). Check the ROM URL and host permissions.');return}}
+    catch(err){msg('Could not access the game file. Check the URL and that its host allows cross-origin requests (CORS).');console.error('Game file request failed:',err);return}
+    start(romUrl,g.system,g.name)};
 }).catch(()=>{$('#games').textContent='games.json not found.'});
 </script>
 </body>

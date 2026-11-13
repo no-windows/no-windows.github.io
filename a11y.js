@@ -3,6 +3,7 @@
    Self-contained: injects its own CSS and panel. Reads this desktop and same-origin app windows (not other sites). */
 (function () {
 'use strict';
+if (window.top !== window) return;
 const SYN = window.speechSynthesis;
 const LSget = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v } catch (e) { return d } };
 const cfg = Object.assign({ on: false, rate: 1, pitch: 1, volume: 1, voice: '', verb: 'normal', echo: true, sounds: true, hover: false, caption: true, cursor: true }, LSget('sr.cfg', {}));
@@ -292,6 +293,7 @@ function nextRegion(dir) {
 let ctrlSolo = false;
 const charName = c => ({ ' ': 'space', '\n': 'return', '.': 'dot', ',': 'comma', '-': 'dash', '_': 'underscore', '/': 'slash', '\\': 'backslash', '@': 'at', '#': 'hash', '!': 'exclamation mark', '?': 'question mark', ':': 'colon', ';': 'semicolon', '"': 'quote', "'": 'apostrophe', '(': 'left paren', ')': 'right paren', '&': 'and', '*': 'star', '+': 'plus', '=': 'equals', '%': 'percent', '$': 'dollar', '<': 'less than', '>': 'greater than' })[c] || (/[A-Z]/.test(c) ? 'capital ' + c : c || 'blank');
 const isEditable = t => t && (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && /^(text|search|url|email|tel|password|number)$/i.test(t.type || 'text')));
+const keepsArrowKeys = t => t && (t.isContentEditable || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || (t.tagName === 'INPUT' && /^(number|range)$/i.test(t.type)));
 function echoKey(e, t) {
   if (e.ctrlKey || e.altKey || e.metaKey) return; const k = e.key, v = t.value || '', i = t.selectionStart || 0;
   if (k.length === 1) { if (k === ' ') { const w = v.slice(0, i).split(/\s+/).filter(Boolean).pop(); say(w || 'space') } else say(t.type === 'password' ? 'star' : charName(k)); return }
@@ -324,6 +326,10 @@ function onKey(e, doc) {
     else if (c === 'Minus' || c === 'NumpadSubtract') { cfg.rate = Math.max(.5, +(cfg.rate - .1).toFixed(1)); save(); syncPanel(); say('Speed ' + cfg.rate) }
     else h = false;
     if (h) { e.preventDefault(); e.stopPropagation() } return;
+  }
+  if (!e.ctrlKey && !e.altKey && !e.metaKey && !keepsArrowKeys(e.target)) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); move(1); return }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); return }
   }
   if (e.key === 'F6') { e.preventDefault(); nextRegion(e.shiftKey ? -1 : 1); return }
   const t = e.target;
