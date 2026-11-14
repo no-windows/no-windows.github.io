@@ -192,6 +192,17 @@
       "h": 640
     },
     {
+      "id": "grand-drive-vice-miami",
+      "name": "Grand Drive Auto: Vice Miami",
+      "icon": "🚘",
+      "type": "web",
+      "cat": "Games",
+      "desc": "Open the game listing on Yandex Games. Use ↗ if it does not load in the app window.",
+      "url": "https://yandex.com/games/app/grand-drive-auto-vice-miami-620193",
+      "w": 1100,
+      "h": 720
+    },
+    {
       "id": "deckcraft",
       "name": "MS PowerPoint",
       "icon": "📙",
